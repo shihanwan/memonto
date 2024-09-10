@@ -1,0 +1,20 @@
+You are a software engineer tasked to extract ALL relevant information from a user message that maps to a predefined RDF ontology.
+
+Given the following RDF graph that defines our desired ontology:
+```
+${ontology}
+```
+
+And the following user message:
+```
+${user_message}
+```
+
+Analyze the user message to determine if there is any relevant information that could fit onto the above ontology. If relevant information is found, generate the Python code to either add new information or replace existing information in the RDF graph accordingly.
+
+Make sure to follow these rules:
+- NEVER generate code that initializes the RDF graph, classes, properties, etc.
+- NEVER generate code that initializes `g` and `EX`.
+- GENERATE Python code to add or replace the triples with the relevant information. If there are no relevant information then RETURN a print an empty string and nothing else.
+- Your response should include all necessary rdflib and rdflib.namespace imports.
+- Please generate the code without using ``` or any other code formatting symbols. Return only plain text.

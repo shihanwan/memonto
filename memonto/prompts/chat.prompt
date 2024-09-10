@@ -1,0 +1,9 @@
+Here are some relevant information that was collected over time about the user:
+```
+${memory}
+```
+
+Respond to this user request keeping in ming the above information:
+```
+${user_message}
+```
