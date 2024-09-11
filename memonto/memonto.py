@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from rdflib import Graph
-from typing import Optional
+from typing import Union
+
+from memonto.graph import graph_memory
 
 class Memonto(BaseModel):
     g: Graph = Field(..., description="An RDF graph representing the ontology of the memory.")
@@ -11,24 +13,21 @@ class Memonto(BaseModel):
         """
         print(f"Committing memory using RDF graph with {len(self.g)} triples.")
 
-    def graph(self, type: str = "turtle") -> str:
+    def graph(self, format: str = "turtle") -> Union[str, dict]:
         """
         Return a text representation of the memory ontology.
         
         Parameters:
-        type (str): The format in which to render the graph. Supported formats are:
-            - 'json': Return the graph in JSON-LD format.
-            - 'turtle': Return the graph in Turtle format.
+        format (str): The format in which to render the graph. Supported formats are:
+            - "turtle": Return the graph in Turtle format.
+            - "json": Return the graph in JSON-LD format.
         
         Returns:
-        str: text representation of the memory ontology.
+        Union[str, dict]: A text representation of the memory ontology. 
+            - "turtle" format returns a string in Turtle format.
+            - "json" format returns a dictionary in JSON-LD format.
         """
-        if type == "turtle":
-            return self.g.serialize(format="turtle")
-        elif type == "json":
-            return self.g.serialize(format="json-ld")
-        else:
-            raise ValueError(f"Unsupported type '{type}'. Choose from 'json', or 'turtle'.")
+        return graph_memory(g=self.g, format=format)
 
     class Config:
         arbitrary_types_allowed = True
