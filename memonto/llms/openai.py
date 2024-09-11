@@ -23,12 +23,19 @@ class OpenAI(LLMModel):
         self.client = OpenAIClient(api_key=self.api_key)
         return self
 
-    def fit_to_context_window(self, prompt_name: str, **kwargs) -> str:
+    def _get_context_window(self) -> int:
+        for key in self.context_windows:
+            if self.llm_name in key:
+                return self.context_windows[key]
+
+        return 32_000
+
+    def _fit_to_context_window(self, prompt_name: str, **kwargs) -> str:
         prompt_template = load_prompt(prompt_name)
         prompt_str = prompt_template.template
 
         encoding = tiktoken.encoding_for_model(self.llm_name)
-        max_tokens = 128_000
+        max_tokens = self._get_context_window()
         buffer = 0.1
 
         prompt_tokens = encoding.encode(prompt_str)
@@ -59,7 +66,7 @@ class OpenAI(LLMModel):
         debug: bool = False,
         **kwargs,
     ) -> str:
-        prompt_template = self.fit_to_context_window(
+        prompt_template = self._fit_to_context_window(
             prompt_name=prompt_name,
             **kwargs,
         )

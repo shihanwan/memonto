@@ -11,10 +11,12 @@ from memonto.core.graph import graph_memory
 
 class Memonto(BaseModel):
     g: Graph = Field(
-        ..., description="An RDF graph representing the ontology of the memory."
+        ...,
+        description="An RDF graph representing the ontology of the memory.",
     )
     EX: Namespace = Field(
-        ..., description="A namespace for the entities in the memory ontology."
+        ...,
+        description="A namespace for the entities in the memory ontology.",
     )
     llm_provider: str = Field(..., description="The name of the LLM provider.")
     llm: Optional[LLMModel] = Field(None, description="Model instance.")
