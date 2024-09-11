@@ -1,17 +1,19 @@
 from pydantic import BaseModel, Field
-from rdflib import Graph
+from rdflib import Graph, Namespace
 from typing import Union
 
-from memonto.graph import graph_memory
+from memonto.core.graph import graph_memory
+from memonto.core.commit import commit_memory
 
 class Memonto(BaseModel):
     g: Graph = Field(..., description="An RDF graph representing the ontology of the memory.")
-
-    def commit(self):
+    EX: Namespace = Field(..., description="A namespace for the entities in the memory ontology.")
+    
+    def commit(self, query: str) -> None:
         """
         Simulate committing memory data.
         """
-        print(f"Committing memory using RDF graph with {len(self.g)} triples.")
+        return commit_memory(g=self.g, EX=self.EX, query=query)
 
     def graph(self, format: str = "turtle") -> Union[str, dict]:
         """
