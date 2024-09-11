@@ -7,7 +7,7 @@ def commit_memory(g: Graph, EX: Namespace, llm: LLMModel, query: str) -> None:
     rdf_graph = g.serialize(format="turtle")
 
     new_memory = llm.prompt(
-        prompt="commit_to_memory",
+        prompt_name="commit_to_memory",
         temperature=0.2,
         ontology=rdf_graph,
         user_message=query,

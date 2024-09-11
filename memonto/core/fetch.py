@@ -17,7 +17,7 @@ def fetch_memory(g: Graph, llm: LLMModel) -> str:
     memory = entity_graph.serialize(format="turtle")
 
     summarize_memory = llm.prompt(
-        prompt="summarize_memory",
+        prompt_name="summarize_memory",
         memory=memory,
     )
 

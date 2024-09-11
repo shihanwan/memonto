@@ -4,12 +4,11 @@ from pydantic import BaseModel
 
 class LLMModel(BaseModel, ABC):
     name: str = ...
-    context_window: int = ...
 
     @abstractmethod
     def prompt(
         self,
-        prompt: str,
+        prompt_name: str,
         temperature: float,
         debug: bool,
         **kwargs,
@@ -17,7 +16,7 @@ class LLMModel(BaseModel, ABC):
         """
         Generate a response from the model based on the given prompt.
 
-        :param prompt: The input text to generate a response for.
+        :param prompt_name: The name of the prompt to use.
         :param temperature: The temperature to use when generating the response.
         :param debug: Whether to output debug logs.
         :param kwargs: Additional keyword arguments to pass to the model.
