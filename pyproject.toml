@@ -7,6 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+pydantic = "^2.9.1"
+rdflib = "^7.0.0"
 
 
 [build-system]
