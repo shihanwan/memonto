@@ -5,6 +5,7 @@ from typing import Optional, Union
 from memonto.llms.base_llm import LLMModel
 from memonto.llms.factory import llm_factory
 from memonto.core.commit import commit_memory
+from memonto.core.fetch import fetch_memory
 from memonto.core.graph import graph_memory
 
 class Memonto(BaseModel):
@@ -28,7 +29,15 @@ class Memonto(BaseModel):
         """
         return commit_memory(g=self.g, EX=self.EX, llm=self.llm, query=query)
 
-    def graph(self, format: str = "turtle") -> Union[str, dict]:
+    def fetch(self) -> str:
+        """
+        Return a text summary of the current memory.
+
+        :return: A text summary of the current memory.
+        """
+        return fetch_memory(g=self.g, llm=self.llm)
+
+    def render(self, format: str = "turtle") -> Union[str, dict]:
         """
         Return a text representation of the memory ontology.
 
