@@ -12,6 +12,4 @@ def commit_memory(g: Graph, EX: Namespace, llm: LLMModel, query: str) -> None:
         user_message=query,
     )
 
-    print(new_memory)
-
     exec(new_memory, {"g": g, "EX": EX})
