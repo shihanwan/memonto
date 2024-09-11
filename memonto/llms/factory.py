@@ -6,12 +6,11 @@ from memonto.utils.config import (
     MODEL_TEMPERATURE,
 )
 
+
 def llm_factory(llm_provider: str) -> LLMModel:
     if llm_provider == "openai":
         return OpenAI(
-            api_key=MODEL_API_KEY,
-            model=MODEL_NAME,
-            temperature=MODEL_TEMPERATURE
+            api_key=MODEL_API_KEY, model=MODEL_NAME, temperature=MODEL_TEMPERATURE
         )
     else:
         raise ValueError(f"LLM model {llm_provider} not found")

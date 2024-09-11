@@ -1,7 +1,8 @@
 from pathlib import Path
 from string import Template
 
-def load_prompt(prompt_name: str) -> Template:    
+
+def load_prompt(prompt_name: str) -> Template:
     base_dir = Path(__file__).resolve().parent.parent
     file_path = base_dir / "prompts" / f"{prompt_name}.prompt"
 

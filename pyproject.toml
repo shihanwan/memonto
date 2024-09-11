@@ -12,6 +12,7 @@ rdflib = "^7.0.0"
 openai = "^1.44.1"
 python-dotenv = "^1.0.1"
 graphviz = "^0.20.3"
+black = "^24.8.0"
 
 
 [build-system]

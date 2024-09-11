@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from pydantic import BaseModel
 
-class LLMModel(BaseModel, ABC):    
+
+class LLMModel(BaseModel, ABC):
     name: str = ...
     context_window: int = ...
 
@@ -25,6 +26,5 @@ class LLMModel(BaseModel, ABC):
         """
         pass
 
-    
     class Config:
         arbitrary_types_allowed = True

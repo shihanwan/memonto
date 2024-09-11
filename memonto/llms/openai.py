@@ -4,6 +4,7 @@ from pydantic import model_validator
 from memonto.llms.base_llm import LLMModel
 from memonto.utils.prompt import load_prompt
 
+
 class OpenAI(LLMModel):
     name: str = "OpenAI"
     context_window: int = 32_000
@@ -24,13 +25,15 @@ class OpenAI(LLMModel):
         debug: bool = False,
         **kwargs,
     ) -> str:
-        prompt_template = load_prompt(prompt).substitute(**kwargs)        
+        prompt_template = load_prompt(prompt).substitute(**kwargs)
 
         response = self.client.chat.completions.create(
-            messages=[{
-                "role": "user",
-                "content": prompt_template,
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt_template,
+                }
+            ],
             model=self.model,
             temperature=temperature or self.temperature,
         )
