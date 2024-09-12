@@ -8,14 +8,14 @@ from memonto.utils.llm import load_prompt
 
 class OpenAI(LLMModel):
     name: str = "OpenAI"
+    model: str = ...
     api_key: str = ...
-    llm_name: str = ...
     context_windows: dict = {
         "gpt-3.5": 16_385,
         "gpt-4-turbo": 128_000,
         "gpt-4o": 128_000,
     }
-    temperature: float = ...
+    temperature: float = 0.5
     client: OpenAIClient = None
 
     @model_validator(mode="after")
@@ -25,7 +25,7 @@ class OpenAI(LLMModel):
 
     def _get_context_window(self) -> int:
         for key in self.context_windows:
-            if self.llm_name in key:
+            if self.model in key:
                 return self.context_windows[key]
 
         return 32_000
@@ -34,7 +34,7 @@ class OpenAI(LLMModel):
         prompt_template = load_prompt(prompt_name)
         prompt_str = prompt_template.template
 
-        encoding = tiktoken.encoding_for_model(self.llm_name)
+        encoding = tiktoken.encoding_for_model(self.model)
         max_tokens = self._get_context_window()
         buffer = 0.1
 
@@ -78,7 +78,7 @@ class OpenAI(LLMModel):
                     "content": prompt_template,
                 }
             ],
-            model=self.llm_name,
+            model=self.model,
             temperature=temperature or self.temperature,
         )
 

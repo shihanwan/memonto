@@ -2,11 +2,14 @@ from pydantic import BaseModel, Field, model_validator
 from rdflib import Graph, Namespace
 from typing import Optional, Union
 
-from memonto.llms.base_llm import LLMModel
-from memonto.llms.factory import llm_factory
 from memonto.core.commit import commit_memory
+from memonto.core.configure import configure
 from memonto.core.fetch import fetch_memory
 from memonto.core.graph import graph_memory
+from memonto.llms.base_llm import LLMModel
+from memonto.llms.factory import llm_factory
+from memonto.stores.base_store import StoreModel
+from memonto.stores.factory import store_factory
 
 
 class Memonto(BaseModel):
@@ -18,13 +21,35 @@ class Memonto(BaseModel):
         ...,
         description="A namespace for the entities in the memory ontology.",
     )
-    llm_provider: str = Field(..., description="The name of the LLM provider.")
     llm: Optional[LLMModel] = Field(None, description="Model instance.")
+    store: Optional[StoreModel] = Field(None, description="Store instance.")
+    
+    def configure(self, config: dict) -> None:
+        """
+        Configure memonto with the desired llm model and datastore.
 
-    @model_validator(mode="after")
-    def init(self) -> "Memonto":
-        self.llm = llm_factory(self.llm_provider)
-        return self
+        :param config: A dictionary containing the configuration for the LLM model and the store.
+            configs = {
+                "store": {
+                    "provider": "apache_jena",
+                    "config": {
+                        "connection_url": "http://localhost:3030/ds/update",
+                        "username": "",
+                        "password": "",
+                    },
+                },
+                "model": {
+                    "provider": "openai",
+                    "config": {
+                        "model": "gpt-4o",
+                        "api_key": "",
+                    },
+                }
+            }
+
+        :return: None
+        """
+        return configure(self, config=config)
 
     def commit(self, query: str) -> None:
         """
