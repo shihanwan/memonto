@@ -1,9 +1,16 @@
 from rdflib import Graph, Namespace
 
 from memonto.llms.base_llm import LLMModel
+from memonto.stores.base_store import StoreModel
 
 
-def commit_memory(g: Graph, EX: Namespace, llm: LLMModel, query: str) -> None:
+def commit_memory(
+    g: Graph,
+    EX: Namespace,
+    llm: LLMModel,
+    store: StoreModel,
+    query: str,
+) -> None:
     rdf_graph = g.serialize(format="turtle")
 
     new_memory = llm.prompt(
@@ -14,3 +21,5 @@ def commit_memory(g: Graph, EX: Namespace, llm: LLMModel, query: str) -> None:
     )
 
     exec(new_memory, {"g": g, "EX": EX})
+
+    store.save(g)

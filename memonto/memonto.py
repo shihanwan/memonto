@@ -23,7 +23,7 @@ class Memonto(BaseModel):
     )
     llm: Optional[LLMModel] = Field(None, description="Model instance.")
     store: Optional[StoreModel] = Field(None, description="Store instance.")
-    
+
     def configure(self, config: dict) -> None:
         """
         Configure memonto with the desired llm model and datastore.
@@ -59,7 +59,9 @@ class Memonto(BaseModel):
 
         :return: None
         """
-        return commit_memory(g=self.g, EX=self.EX, llm=self.llm, query=query)
+        return commit_memory(
+            g=self.g, EX=self.EX, llm=self.llm, store=self.store, query=query
+        )
 
     def fetch(self) -> str:
         """

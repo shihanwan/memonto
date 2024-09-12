@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel
 
 
-class StoreModel(BaseModel, ABC):    
+class StoreModel(BaseModel, ABC):
     name: str = ...
 
     @abstractmethod
