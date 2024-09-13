@@ -7,9 +7,7 @@ from memonto.core.configure import configure
 from memonto.core.fetch import fetch_memory
 from memonto.core.graph import graph_memory
 from memonto.llms.base_llm import LLMModel
-from memonto.llms.factory import llm_factory
 from memonto.stores.base_store import StoreModel
-from memonto.stores.factory import store_factory
 
 
 class Memonto(BaseModel):

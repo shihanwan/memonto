@@ -15,7 +15,7 @@ graphviz = "^0.20.3"
 black = "^24.8.0"
 pre-commit = "^3.8.0"
 tiktoken = "^0.7.0"
-requests = "^2.32.3"
+sparqlwrapper = "^2.0.0"
 
 
 [build-system]

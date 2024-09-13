@@ -12,5 +12,12 @@ class StoreModel(BaseModel, ABC):
         """
         pass
 
+    @abstractmethod
+    def load(self) -> None:
+        """
+        Persist the current memory to the datastore.
+        """
+        pass
+
     class Config:
         arbitrary_types_allowed = True
