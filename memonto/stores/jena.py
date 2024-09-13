@@ -1,5 +1,5 @@
 from rdflib import Graph, URIRef, Literal
-from SPARQLWrapper import SPARQLWrapper, POST
+from SPARQLWrapper import SPARQLWrapper, POST, JSON
 
 from memonto.stores.base_store import StoreModel
 
@@ -12,11 +12,12 @@ class ApacheJena(StoreModel):
 
     def _query(
         self,
-        method: Literal["POST"],
+        url: str,
+        method: Literal,
         query: str,
-        return_format: str,
+        return_format: str = JSON,
     ) -> SPARQLWrapper:
-        sparql = SPARQLWrapper(self.connection_url)
+        sparql = SPARQLWrapper(url)
         sparql.setQuery(query)
         sparql.setMethod(method)
 
@@ -26,27 +27,36 @@ class ApacheJena(StoreModel):
         sparql.setReturnFormat(return_format)
 
         try:
-            return sparql.query()
+            return sparql.query().convert()
         except Exception as e:
             print(f"SPARQL query error: {e}")
 
-    def save(self, g: Graph) -> None:
+    def save(self, g: Graph, id: str = None) -> None:
         rdf_data = g.serialize(format="nt")
-        query = f"INSERT DATA {{{rdf_data}}}"
+
+        if id:
+            query = f"INSERT DATA {{ GRAPH <{id}> {{{rdf_data}}} }}"
+        else:
+            query = f"INSERT DATA {{{rdf_data}}}"
 
         self._query(
+            url=f"{self.connection_url}/update",
             method=POST,
             query=query,
-            return_format="json",
         )
 
-    def load(self) -> Graph:
-        query = "SELECT ?s ?p ?o WHERE {?s ?p ?o}"
+        print(g.serialize(format="turtle"))
+
+    def load(self, id: str = None) -> Graph:
+        if id:
+            query = f"SELECT ?s ?p ?o WHERE {{ GRAPH <{id}> {{ ?s ?p ?o }} }}"
+        else:
+            query = "SELECT ?s ?p ?o WHERE { ?s ?p ?o }"
 
         response = self._query(
+            url=f"{self.connection_url}/sparql",
             method=POST,
             query=query,
-            return_format="json",
         )
 
         g = Graph()
@@ -60,5 +70,7 @@ class ApacheJena(StoreModel):
                 obj = Literal(binding["o"]["value"])
 
             g.add((subj, pred, obj))
+
+        print(g.serialize(format="turtle"))
 
         return g

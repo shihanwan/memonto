@@ -10,6 +10,7 @@ def commit_memory(
     llm: LLMModel,
     store: StoreModel,
     query: str,
+    id: str = None,
 ) -> None:
     rdf_graph = g.serialize(format="turtle")
 
@@ -20,6 +21,7 @@ def commit_memory(
         user_message=query,
     )
 
+    # TODO: exception handling
     exec(new_memory, {"g": g, "EX": EX})
 
-    store.save(g)
+    store.save(g, id)

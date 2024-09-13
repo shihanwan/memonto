@@ -49,25 +49,28 @@ class Memonto(BaseModel):
         """
         return configure(self, config=config)
 
-    def commit(self, query: str) -> None:
+    def commit(self, query: str, id: str = None) -> None:
         """
-        Break down user query into memory that fits on the RDF ontology.
+        Break down the user's query for relevant information that maps onto an RDF ontology and store them as memories.
 
         :param query: The user query that is broken down into a graph then committed to memory.
+        :param id[Optional]: Identifier to track the memory associated with a unique transaction or user.
 
         :return: None
         """
         return commit_memory(
-            g=self.g, EX=self.EX, llm=self.llm, store=self.store, query=query
+            g=self.g, EX=self.EX, llm=self.llm, store=self.store, query=query, id=id
         )
 
-    def fetch(self) -> str:
+    def fetch(self, id: str = None) -> str:
         """
         Return a text summary of the current memory.
 
+        :param id[Optional]: Identifier to return just the memory associated with a unique transaction or user.
+
         :return: A text summary of the current memory.
         """
-        return fetch_memory(g=self.g, llm=self.llm)
+        return fetch_memory(g=self.g, llm=self.llm, store=self.store, id=id)
 
     def render(self, format: str = "turtle") -> Union[str, dict]:
         """

@@ -2,10 +2,11 @@ from rdflib import Graph
 from rdflib.namespace import RDF, RDFS
 
 from memonto.llms.base_llm import LLMModel
+from memonto.stores.base_store import StoreModel    
 
 
-def fetch_memory(g: Graph, llm: LLMModel) -> str:
-    entity_graph = Graph()
+def fetch_memory(g: Graph, llm: LLMModel, store: StoreModel, id: str = None) -> str:
+    entity_graph = store.load(id=id)
     schema_predicates = {RDFS.domain, RDFS.range, RDFS.subClassOf, RDFS.subPropertyOf}
 
     for subj, pred, obj in g:
