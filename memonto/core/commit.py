@@ -11,6 +11,7 @@ def commit_memory(
     store: StoreModel,
     query: str,
     id: str = None,
+    debug: bool = False,
 ) -> None:
     rdf_graph = g.serialize(format="turtle")
 
@@ -19,7 +20,10 @@ def commit_memory(
         temperature=0.2,
         ontology=rdf_graph,
         user_message=query,
+        instruction="- NEVER generate code that adds information that DOES NOT fit onto the ontology.",
     )
+
+    if debug: print(script)
 
     # TODO: exception handling
     exec(script, {"g": g, "n": n})

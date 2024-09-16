@@ -60,7 +60,13 @@ class Memonto(BaseModel):
         :return: None
         """
         return commit_memory(
-            g=self.g, n=self.n, llm=self.llm, store=self.store, query=query, id=id
+            g=self.g,
+            n=self.n,
+            llm=self.llm,
+            store=self.store,
+            query=query,
+            id=id,
+            debug=self.debug,
         )
 
     def fetch(self, id: str = None) -> str:

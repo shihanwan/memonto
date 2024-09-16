@@ -13,6 +13,8 @@ ${user_message}
 Analyze the user message to determine if there is any relevant information that could fit onto the above ontology. If relevant information is found, generate the Python code to either add new information or replace existing information in the RDF graph accordingly.
 
 Make sure to follow these rules:
+${instruction}
+- NEVER generate code that adds information that already exists in the ontology.
 - NEVER generate code that initializes the RDF graph, classes, properties, etc.
 - NEVER generate code that initializes rdflib graph and namespace.
 - GENERATE Python code to add or replace the triples with the relevant information assuming rdflib Graph `g` and namespace `n`.
