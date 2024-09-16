@@ -1,6 +1,6 @@
 import graphviz
 from pathlib import Path
-from rdflib import Graph, URIRef
+from rdflib import Graph
 from rdflib.namespace import RDF, RDFS
 
 

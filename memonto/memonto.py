@@ -22,6 +22,10 @@ class Memonto(BaseModel):
     llm: Optional[LLMModel] = Field(None, description="Model instance.")
     store: Optional[StoreModel] = Field(None, description="Store instance.")
     debug: Optional[bool] = Field(False, description="Flag to enable debug mode.")
+    expand_ontology: Optional[bool] = Field(
+        True,
+        description="Flag to enable automatic expansion of the ontology.",
+    )
 
     def configure(self, config: dict) -> None:
         """
@@ -67,6 +71,7 @@ class Memonto(BaseModel):
             query=query,
             id=id,
             debug=self.debug,
+            expand_ontology=self.expand_ontology,
         )
 
     def fetch(self, id: str = None) -> str:
