@@ -5,7 +5,6 @@ from memonto.stores.base_store import StoreModel
 
 
 def commit_memory(
-    self,
     g: Graph,
     n: Namespace,
     llm: LLMModel,

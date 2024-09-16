@@ -21,6 +21,7 @@ class Memonto(BaseModel):
     )
     llm: Optional[LLMModel] = Field(None, description="Model instance.")
     store: Optional[StoreModel] = Field(None, description="Store instance.")
+    debug: Optional[bool] = Field(False, description="Flag to enable debug mode.")
 
     def configure(self, config: dict) -> None:
         """
@@ -59,7 +60,7 @@ class Memonto(BaseModel):
         :return: None
         """
         return commit_memory(
-            self, g=self.g, n=self.n, llm=self.llm, store=self.store, query=query, id=id
+            g=self.g, n=self.n, llm=self.llm, store=self.store, query=query, id=id
         )
 
     def fetch(self, id: str = None) -> str:

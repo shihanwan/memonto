@@ -34,7 +34,7 @@ class ApacheJena(StoreModel):
         gt = g.serialize(format="turtle")
         return [line for line in gt.splitlines() if line.startswith("@prefix")]
 
-    def save(self, g: Graph, id: str = None) -> None:
+    def save(self, g: Graph, id: str = None, debug: bool = False) -> None:
         triples = g.serialize(format="nt")
         prefixes = self._get_prefixes(g)
         prefix_block = (
@@ -52,9 +52,10 @@ class ApacheJena(StoreModel):
             query=query,
         )
 
-        print(g.serialize(format="turtle"))
+        if debug:
+            print(g.serialize(format="turtle"))
 
-    def load(self, id: str = None) -> Graph:
+    def load(self, id: str = None, debug: bool = False) -> Graph:
         if id:
             query = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{id}> {{ ?s ?p ?o }} }}"
         else:
@@ -66,11 +67,10 @@ class ApacheJena(StoreModel):
             query=query,
         )
 
-        print(response)
-
         g = Graph()
         g.parse(data=response, format="turtle")
 
-        print(g.serialize(format="turtle"))
+        if debug:
+            print(g.serialize(format="turtle"))
 
         return g

@@ -1,4 +1,4 @@
-from rdflib import Graph, Namespace
+from rdflib import Graph
 from rdflib.namespace import RDF, RDFS
 
 from memonto.llms.base_llm import LLMModel
@@ -11,17 +11,18 @@ def fetch_memory(
     store: StoreModel,
     id: str = None,
 ) -> str:
-    g = store.load(id=id)
+    g = store.load(id=id, debug=self.debug)
     self.g = g
 
-    schema_predicates = {RDFS.domain, RDFS.range, RDFS.subClassOf, RDFS.subPropertyOf}
+    filters = {RDFS.domain, RDFS.range, RDFS.subClassOf, RDFS.subPropertyOf}
+    filtered_g = Graph()
 
-    for subj, pred, obj in g:
-        if pred in schema_predicates or (pred == RDF.type and obj == RDFS.Class):
+    for s, p, o in g:
+        if p in filters or (p == RDF.type and o == RDFS.Class):
             continue
-        g.add((subj, pred, obj))
+        filtered_g.add((s, p, o))
 
-    memory = g.serialize(format="turtle")
+    memory = filtered_g.serialize(format="turtle")
 
     summarized_memory = llm.prompt(
         prompt_name="summarize_memory",
