@@ -15,9 +15,9 @@ class Memonto(BaseModel):
         ...,
         description="An RDF graph representing the ontology of the memory.",
     )
-    EX: Namespace = Field(
+    n: Namespace = Field(
         ...,
-        description="A namespace for the entities in the memory ontology.",
+        description="A namespace for the memory ontology.",
     )
     llm: Optional[LLMModel] = Field(None, description="Model instance.")
     store: Optional[StoreModel] = Field(None, description="Store instance.")
@@ -59,7 +59,7 @@ class Memonto(BaseModel):
         :return: None
         """
         return commit_memory(
-            g=self.g, EX=self.EX, llm=self.llm, store=self.store, query=query, id=id
+            self, g=self.g, n=self.n, llm=self.llm, store=self.store, query=query, id=id
         )
 
     def fetch(self, id: str = None) -> str:
@@ -70,7 +70,7 @@ class Memonto(BaseModel):
 
         :return: A text summary of the current memory.
         """
-        return fetch_memory(g=self.g, llm=self.llm, store=self.store, id=id)
+        return fetch_memory(self, llm=self.llm, store=self.store, id=id)
 
     def render(self, format: str = "turtle") -> Union[str, dict]:
         """

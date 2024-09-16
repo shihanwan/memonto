@@ -5,8 +5,9 @@ from memonto.stores.base_store import StoreModel
 
 
 def commit_memory(
+    self,
     g: Graph,
-    EX: Namespace,
+    n: Namespace,
     llm: LLMModel,
     store: StoreModel,
     query: str,
@@ -14,7 +15,7 @@ def commit_memory(
 ) -> None:
     rdf_graph = g.serialize(format="turtle")
 
-    new_memory = llm.prompt(
+    script = llm.prompt(
         prompt_name="commit_to_memory",
         temperature=0.2,
         ontology=rdf_graph,
@@ -22,6 +23,6 @@ def commit_memory(
     )
 
     # TODO: exception handling
-    exec(new_memory, {"g": g, "EX": EX})
+    exec(script, {"g": g, "n": n})
 
     store.save(g, id)
