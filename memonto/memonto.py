@@ -5,7 +5,7 @@ from typing import Optional, Union
 from memonto.core.commit import commit_memory
 from memonto.core.configure import configure
 from memonto.core.fetch import fetch_memory
-from memonto.core.graph import graph_memory
+from memonto.core.graph import render_memory
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
 
@@ -23,7 +23,7 @@ class Memonto(BaseModel):
     store: Optional[StoreModel] = Field(None, description="Store instance.")
     debug: Optional[bool] = Field(False, description="Flag to enable debug mode.")
     expand_ontology: Optional[bool] = Field(
-        True,
+        False,
         description="Flag to enable automatic expansion of the ontology.",
     )
 
@@ -91,12 +91,16 @@ class Memonto(BaseModel):
         :param format: The format in which to render the graph. Supported formats are:
             - "turtle": Return the graph in Turtle format.
             - "json": Return the graph in JSON-LD format.
+            - "text": Return the graph in text format.
+            - "image": Return the graph as a png image.
 
         :return: A text representation of the memory ontology.
             - "turtle" format returns a string in Turtle format.
             - "json" format returns a dictionary in JSON-LD format.
+            - "text" format returns a string in text format.
+            - "image" format returns a string with the path to the png image.
         """
-        return graph_memory(g=self.g, format=format)
+        return render_memory(g=self.g, format=format)
 
     class Config:
         arbitrary_types_allowed = True

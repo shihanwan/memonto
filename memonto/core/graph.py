@@ -29,14 +29,34 @@ def generate_image(g: Graph) -> None:
     save_path = local_dir / "rdf_graph"
 
     dot.render(str(save_path), format="png")
+    
+    return f"{save_path}.png"
 
 
-def graph_memory(g: Graph, format: str) -> str:
+def generate_text(g: Graph) -> str:
+    text_g = ""
+
+    for s, p, o in g:
+        if p in [RDF.type, RDFS.domain, RDFS.range, RDFS.subClassOf]:
+            continue
+
+        s_label = sanitize_label(str(s))
+        p_label = sanitize_label(str(p))
+        o_label = sanitize_label(str(o))
+
+        text_g += f"({s_label}) -> [{p_label}] -> ({o_label})\n"
+
+    return text_g
+
+
+def render_memory(g: Graph, format: str) -> str:
     if format == "turtle":
         return g.serialize(format="turtle")
     elif format == "json":
         return g.serialize(format="json-ld")
+    elif format == "text":
+        return generate_text(g)
     elif format == "image":
-        generate_image(g)
+        return generate_image(g)
     else:
         raise ValueError(f"Unsupported type '{type}'. Choose from 'json', or 'turtle'.")
