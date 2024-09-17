@@ -6,6 +6,7 @@ from memonto.core.commit import commit_memory
 from memonto.core.configure import configure
 from memonto.core.fetch import fetch_memory
 from memonto.core.graph import render_memory
+from memonto.core.load import load_memory
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
 
@@ -74,15 +75,23 @@ class Memonto(BaseModel):
             expand_ontology=self.expand_ontology,
         )
 
-    def fetch(self, id: str = None) -> str:
+    def load(self, id: str = None) -> None:
+        """
+        Load existing memory from the store.
+
+        :param id[Optional]: Identifier to load the memory associated with a unique transaction or user.
+
+        :return: None.
+        """
+        self.g = load_memory(store=self.store, id=id)
+
+    def fetch(self) -> str:
         """
         Return a text summary of the current memory.
 
-        :param id[Optional]: Identifier to return just the memory associated with a unique transaction or user.
-
         :return: A text summary of the current memory.
         """
-        return fetch_memory(self, llm=self.llm, store=self.store, id=id)
+        return fetch_memory(g=self.g, llm=self.llm)
 
     def render(self, format: str = "turtle") -> Union[str, dict]:
         """

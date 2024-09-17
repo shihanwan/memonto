@@ -2,18 +2,9 @@ from rdflib import Graph
 from rdflib.namespace import RDF, RDFS
 
 from memonto.llms.base_llm import LLMModel
-from memonto.stores.base_store import StoreModel
 
 
-def fetch_memory(
-    self,
-    llm: LLMModel,
-    store: StoreModel,
-    id: str = None,
-) -> str:
-    g = store.load(id=id, debug=self.debug)
-    self.g = g
-
+def fetch_memory(g: Graph, llm: LLMModel) -> str:
     filters = {RDFS.domain, RDFS.range, RDFS.subClassOf, RDFS.subPropertyOf}
     filtered_g = Graph()
 

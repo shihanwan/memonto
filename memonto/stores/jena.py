@@ -29,7 +29,7 @@ class ApacheJena(StoreModel):
         try:
             response = sparql.query()
             content_type = response.info()["Content-Type"]
-            
+
             if "html" in content_type:
                 return response.response.read().decode("utf-8")
             else:
