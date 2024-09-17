@@ -29,7 +29,7 @@ def generate_image(g: Graph) -> None:
     save_path = local_dir / "rdf_graph"
 
     dot.render(str(save_path), format="png")
-    
+
     return f"{save_path}.png"
 
 
@@ -59,4 +59,4 @@ def render_memory(g: Graph, format: str) -> str:
     elif format == "image":
         return generate_image(g)
     else:
-        raise ValueError(f"Unsupported type '{type}'. Choose from 'json', or 'turtle'.")
+        raise ValueError(f"Unsupported type '{type}'.")

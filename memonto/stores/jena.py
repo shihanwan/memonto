@@ -1,5 +1,6 @@
-from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib import Graph, Literal
 from SPARQLWrapper import SPARQLWrapper, POST, TURTLE
+from SPARQLWrapper.SPARQLExceptions import SPARQLWrapperException
 
 from memonto.stores.base_store import StoreModel
 
@@ -26,9 +27,17 @@ class ApacheJena(StoreModel):
             sparql.setCredentials(self.username, self.password)
 
         try:
-            return sparql.query().convert()
-        except Exception as e:
+            response = sparql.query()
+            content_type = response.info()["Content-Type"]
+            
+            if "html" in content_type:
+                return response.response.read().decode("utf-8")
+            else:
+                return response.convert()
+        except SPARQLWrapperException as e:
             print(f"SPARQL query error: {e}")
+        except Exception as e:
+            print(f"Generic error: {e}")
 
     def _get_prefixes(self, g: Graph):
         gt = g.serialize(format="turtle")
