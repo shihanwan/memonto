@@ -15,7 +15,14 @@ class StoreModel(BaseModel, ABC):
     @abstractmethod
     def load(self) -> None:
         """
-        Persist the current memory to the datastore.
+        Load existing memory from datastore.
+        """
+        pass
+
+    @abstractmethod
+    def get(self) -> None:
+        """
+        Perform a get query against the datastore for memory data.
         """
         pass
 

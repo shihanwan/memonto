@@ -26,7 +26,7 @@ def execute_script(
             if debug:
                 print(f"Attempt {attempt + 1} to commit memory failed with error: {e}")
 
-            temperature = initial_temperature * (2 ** attempt)
+            temperature = initial_temperature * (2**attempt)
             temperature = min(temperature, 1.0)
 
             script = llm.prompt(

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, model_validator
-from rdflib import Graph, Namespace
+from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
 from memonto.core.commit import commit_memory
@@ -7,6 +7,7 @@ from memonto.core.configure import configure
 from memonto.core.fetch import fetch_memory
 from memonto.core.graph import render_memory
 from memonto.core.load import load_memory
+from memonto.core.query import query_memory_data
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
 
@@ -92,6 +93,18 @@ class Memonto(BaseModel):
         :return: A text summary of the current memory.
         """
         return fetch_memory(g=self.g, llm=self.llm)
+
+    def query(self, id: str = None, uri: URIRef = None, query: str = None) -> list:
+        """
+        Perform query against the datastore to retrieve raw memory data rather than a summary.
+
+        :param id[Optional]: Identifier to track the memory associated with a unique transaction or user.
+        :param uri[Optional]: URI of the entity to query for.
+        :param query[Optional]: Raw query that will be performed against the datastore. If you pass in a raw query then the id and uri parameters will be ignored.
+
+        :return: A list of triples (subject, predicate, object).
+        """
+        return query_memory_data(store=self.store, id=id, uri=uri, query=query)
 
     def render(self, format: str = "turtle") -> Union[str, dict]:
         """

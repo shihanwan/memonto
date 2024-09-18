@@ -1,5 +1,5 @@
-from rdflib import Graph, Literal
-from SPARQLWrapper import SPARQLWrapper, POST, TURTLE
+from rdflib import Graph, Literal, URIRef
+from SPARQLWrapper import SPARQLWrapper, GET, POST, TURTLE, JSON
 from SPARQLWrapper.SPARQLExceptions import SPARQLWrapperException
 
 from memonto.stores.base_store import StoreModel
@@ -83,3 +83,37 @@ class ApacheJena(StoreModel):
             print(g.serialize(format="turtle"))
 
         return g
+
+    def get(self, id: str, uri: URIRef, debug: bool = False) -> list:
+        query = f"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+        SELECT ?s ?p ?o WHERE {{
+            GRAPH <{id}> {{
+                ?s ?p ?o .
+                FILTER (?s = <{str(uri)}> || ?p = <{str(uri)}> || ?o = <{str(uri)}> )
+                FILTER (?p != rdfs:domain && ?p != rdfs:range && ?p != rdfs:subClassOf)
+            }}
+        }}
+        """
+
+        result = self._query(
+            url=f"{self.connection_url}/sparql",
+            method=GET,
+            query=query,
+            format=JSON,
+        )
+
+        return result["results"]["bindings"]
+
+    def get_raw(self, query: str) -> list:
+        result = self._query(
+            url=f"{self.connection_url}/sparql",
+            method=GET,
+            query=query,
+            format=JSON,
+        )
+
+        return result["results"]["bindings"]
