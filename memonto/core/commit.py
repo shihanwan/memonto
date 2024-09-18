@@ -60,12 +60,14 @@ def commit_memory(
 
     if expand_ontology:
         instruction = "- If there are information that is valuable but doesn't fit onto the ontology then add them as well."
+        temperature = 0.5
     else:
         instruction = "- NEVER generate code that adds information that DOES NOT fit onto the ontology."
+        temperature = 0.2
 
     script = llm.prompt(
         prompt_name="commit_to_memory",
-        temperature=0.2,
+        temperature=temperature,
         ontology=gt,
         user_message=query,
         instruction=instruction,
