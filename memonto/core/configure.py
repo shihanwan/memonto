@@ -1,3 +1,4 @@
+from memonto.llms.anthropic import Anthropic
 from memonto.llms.openai import OpenAI
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
@@ -14,6 +15,8 @@ def configure_store(store_provider: str, **config) -> StoreModel:
 def configure_model(model_provider: str, **config) -> LLMModel:
     if model_provider == "openai":
         return OpenAI(**config)
+    elif model_provider == "anthropic":
+        return Anthropic(**config)
     else:
         raise ValueError(f"LLM model {model_provider} not found")
 

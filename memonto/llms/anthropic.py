@@ -1,26 +1,25 @@
-import tiktoken
-from openai import OpenAI as OpenAIClient
+from anthropic import Anthropic as AnthropicClient, HUMAN_PROMPT, AI_PROMPT
 from pydantic import model_validator
 
 from memonto.llms.base_llm import LLMModel
 from memonto.utils.llm import load_prompt
 
 
-class OpenAI(LLMModel):
-    name: str = "OpenAI"
+class Anthropic(LLMModel):
+    name: str = "Anthropic"
     model: str = ...
     api_key: str = ...
     context_windows: dict = {
-        "gpt-3.5": 16_385,
-        "gpt-4-turbo": 128_000,
-        "gpt-4o": 128_000,
+        "claude-3": 200_000,
+        "claude-2.1": 200_000,
+        "claude-2": 100_000,
     }
     temperature: float = 0.5
-    client: OpenAIClient = None
+    client: AnthropicClient = None
 
     @model_validator(mode="after")
-    def initialize_model(self) -> "OpenAI":
-        self.client = OpenAIClient(api_key=self.api_key)
+    def initialize_model(self) -> "Anthropic":
+        self.client = AnthropicClient(api_key=self.api_key)
         return self
 
     def prompt(
@@ -32,13 +31,13 @@ class OpenAI(LLMModel):
     ) -> str:
         prompt_template = self._fit_to_context_window(
             prompt_name=prompt_name,
-            encoding_model=self.model,
             **kwargs,
         )
 
-        response = self.client.chat.completions.create(
+        response = self.client.messages.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt_template}],
+            max_tokens=4096,
             temperature=temperature or self.temperature,
         )
 
@@ -46,4 +45,4 @@ class OpenAI(LLMModel):
             print("\nPROMPT:\n", prompt_template)
             print("RESPONSE:\n", response)
 
-        return response.choices[0].message.content
+        return response.content[0].text
