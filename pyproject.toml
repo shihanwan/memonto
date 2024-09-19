@@ -16,6 +16,7 @@ black = "^24.8.0"
 pre-commit = "^3.8.0"
 tiktoken = "^0.7.0"
 sparqlwrapper = "^2.0.0"
+pytest = "^8.3.3"
 
 
 [build-system]

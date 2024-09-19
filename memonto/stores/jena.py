@@ -94,7 +94,7 @@ class ApacheJena(StoreModel):
         SELECT ?s ?p ?o WHERE {{
             GRAPH <{id}> {{
                 ?s ?p ?o .
-                FILTER (?s = <{str(uri)}> || ?p = <{str(uri)}> || ?o = <{str(uri)}> )
+                FILTER (?o = <{str(uri)}> )
                 FILTER (?p != rdfs:domain && ?p != rdfs:range && ?p != rdfs:subClassOf)
             }}
         }}
