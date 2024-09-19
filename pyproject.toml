@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "memonto"
+version = "0.1.0"
+description = ""
+authors = ["shihanwan <shihanwan@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.9.1"
+rdflib = "^7.0.0"
+openai = "^1.44.1"
+python-dotenv = "^1.0.1"
+graphviz = "^0.20.3"
+black = "^24.8.0"
+pre-commit = "^3.8.0"
+tiktoken = "^0.7.0"
+sparqlwrapper = "^2.0.0"
+pytest = "^8.3.3"
+anthropic = "^0.34.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

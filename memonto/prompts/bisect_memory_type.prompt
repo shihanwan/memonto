@@ -1,0 +1,33 @@
+Given the following user message:
+```
+${user_message}
+```
+
+If you were asked to store that as a memory to be used later, is this more a procedural memory or is it more a factual memory or is it neither.
+
+Factual Knowledge Characteristics:
+- Static Information: Factual knowledge presents descriptions, properties, relationships, or attributes of entities or things.
+- Is/Has Statements: Facts often involve assertions about what something is, has, or belongs to.
+- Non-sequential: There’s typically no indication of time, steps, or sequence.
+- Examples of Clues:
+    - Statements using “is,” “has,” “was,” “belongs to,” etc.
+    - Descriptions of states, properties, relationships, or classifications.
+- Examples of Factual Text:
+    - “John lives at 123 Main Street.”
+    - “Water boils at 100°C.”
+    - “Dogs are mammals.”
+
+Procedural Knowledge Characteristics:
+- Dynamic Information: Procedural knowledge involves steps, actions, sequences, or instructions that are meant to be followed in a specific order.
+- Imperative or Sequential Language: Procedures often use verbs that suggest an action, such as “do,” “perform,” “add,” “bake,” “next,” “then”, etc.
+- Temporal or Conditional: Procedures often involve a sequence of actions or events, sometimes with conditional steps (e.g., “if X, then Y”).
+- Examples of Clues:
+    - Action verbs like “mix,” “bake,” “turn on,” “proceed,” etc.
+    - Words that suggest order or sequence, such as “first,” “next,” “then,” “finally”.
+    - Conditional phrases, such as “if,” “when,” “after,” “before.”
+- Examples of Procedural Text:
+    - “First, mix flour and sugar. Then, add eggs and stir well.”
+    - “If the machine beeps, press the reset button.”
+    - “After boiling, reduce heat to a simmer.”
+
+Give me either PROCEDURAL, FACTUAL, or NONE as an answer ONLY with no extra words.

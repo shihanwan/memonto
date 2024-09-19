@@ -1,0 +1,12 @@
+You are trying to describe the following RDF graph in plain English.
+
+Here is the the RDF graph:
+```
+${memory}
+```
+
+Describe the RDF graph in one paragraph and make sure to follow these rules:
+- FOCUS on the telling a story about the who, what, where, how, etc.
+- LEAVE OUT anything not explicitly defined, do not make pointless assumptions.
+- DO NOT describe the graph schema or entities and DO NOT mention the graph.
+- Make sure to use plain and simple English.
