@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
