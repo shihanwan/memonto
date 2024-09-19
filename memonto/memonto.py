@@ -6,27 +6,24 @@ from memonto.core.commit import commit_memory
 from memonto.core.configure import configure
 from memonto.core.fetch import fetch_memory
 from memonto.core.graph import render_memory
-from memonto.core.load import load_memory
+from memonto.core.remember import load_memory
 from memonto.core.query import query_memory_data
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
 
 
 class Memonto(BaseModel):
-    g: Graph = Field(
-        ...,
-        description="An RDF graph representing the ontology of the memory.",
+    g: Graph = Field(..., description="An RDF graph representation of memories.")
+    # TODO: support multiple namespaces
+    n: Namespace = Field(..., description="Am RDF namespace for the memory.")
+    llm: Optional[LLMModel] = Field(None, description="LLM model instance.")
+    store: Optional[StoreModel] = Field(None, description="Datastore instance.")
+    debug: Optional[bool] = Field(False, description="Enable debug mode.")
+    auto_expand: Optional[bool] = Field(
+        False, description="Enable automatic expansion of the ontology."
     )
-    n: Namespace = Field(
-        ...,
-        description="A namespace for the memory ontology.",
-    )
-    llm: Optional[LLMModel] = Field(None, description="Model instance.")
-    store: Optional[StoreModel] = Field(None, description="Store instance.")
-    debug: Optional[bool] = Field(False, description="Flag to enable debug mode.")
-    expand_ontology: Optional[bool] = Field(
-        False,
-        description="Flag to enable automatic expansion of the ontology.",
+    auto_forget: Optional[bool] = Field(
+        False, description="Enable automatic forgetting of memories."
     )
 
     def configure(self, config: dict) -> None:
@@ -56,12 +53,12 @@ class Memonto(BaseModel):
         """
         return configure(self, config=config)
 
-    def commit(self, query: str, id: str = None) -> None:
+    def retain(self, query: str, id: str = None) -> None:
         """
-        Break down the user's query for relevant information that maps onto an RDF ontology and store them as memories.
+        Analyze a text for relevant information that maps onto an RDF ontology then commit them to the memory store.
 
         :param query: The user query that is broken down into a graph then committed to memory.
-        :param id[Optional]: Identifier to track the memory associated with a unique transaction or user.
+        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
 
         :return: None
         """
@@ -73,32 +70,44 @@ class Memonto(BaseModel):
             query=query,
             id=id,
             debug=self.debug,
-            expand_ontology=self.expand_ontology,
+            expand_ontology=self.auto_expand,
         )
 
-    def load(self, id: str = None) -> None:
+    def remember(self, id: str = None) -> None:
         """
-        Load existing memory from the store.
+        Load existing memories from the memory store to a memonto instance.
 
-        :param id[Optional]: Identifier to load the memory associated with a unique transaction or user.
+        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
 
         :return: None.
         """
         self.g = load_memory(store=self.store, id=id)
 
-    def fetch(self) -> str:
+    def retrieve(self) -> str:
         """
-        Return a text summary of the current memory.
+        Return a text summary of all memories currently stored in the memory store.
 
-        :return: A text summary of the current memory.
+        :return: A text summary of the entire current memory.
         """
         return fetch_memory(g=self.g, llm=self.llm)
 
+    def recall(self):
+        """
+        Return a partial set of memories that are relevant to a context.
+        """
+        pass
+
+    def forget(self):
+        """
+        Remove a memory from the memory store.
+        """
+        pass
+
     def query(self, id: str = None, uri: URIRef = None, query: str = None) -> list:
         """
-        Perform query against the datastore to retrieve raw memory data rather than a summary.
+        Perform query against the memory store to retrieve raw memory data rather than a summary.
 
-        :param id[Optional]: Identifier to track the memory associated with a unique transaction or user.
+        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
         :param uri[Optional]: URI of the entity to query for.
         :param query[Optional]: Raw query that will be performed against the datastore. If you pass in a raw query then the id and uri parameters will be ignored.
 
@@ -108,7 +117,7 @@ class Memonto(BaseModel):
 
     def render(self, format: str = "turtle") -> Union[str, dict]:
         """
-        Return a text representation of the memory ontology.
+        Return a text representation of the entire currently stored memory.
 
         :param format: The format in which to render the graph. Supported formats are:
             - "turtle": Return the graph in Turtle format.
@@ -116,7 +125,7 @@ class Memonto(BaseModel):
             - "text": Return the graph in text format.
             - "image": Return the graph as a png image.
 
-        :return: A text representation of the memory ontology.
+        :return: A text representation of the memory.
             - "turtle" format returns a string in Turtle format.
             - "json" format returns a dictionary in JSON-LD format.
             - "text" format returns a string in text format.
