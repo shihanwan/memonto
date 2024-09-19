@@ -24,6 +24,7 @@ jobs:
           pip install black
 
       - name: Run Black formatter
+        id: black
         run: black .
 
       - name: Commit and push changes
@@ -33,4 +34,4 @@ jobs:
           git add .
           git commit -m "Apply Black formatting"
           git push
-        if: ${{ steps.black.outcome == 'success' }}
+        if: ${{ steps.black.outcome == 'success' }} 
