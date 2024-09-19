@@ -32,6 +32,11 @@ jobs:
           git config --local user.name "GitHub Actions"
           git config --local user.email "actions@github.com"
           git add .
-          git commit -m "Apply Black formatting"
-          git push
-        if: ${{ steps.black.outcome == 'success' }} 
+          # Check if there are any changes to commit
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply Black formatting"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+        if: ${{ steps.black.outcome == 'success' }}
