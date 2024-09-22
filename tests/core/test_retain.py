@@ -1,6 +1,6 @@
 import pytest
 from rdflib import Graph, Namespace
-from unittest.mock import ANY, MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call
 
 from memonto.core.retain import commit_memory
 
