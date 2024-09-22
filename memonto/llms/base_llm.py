@@ -1,6 +1,6 @@
 import tiktoken
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from memonto.utils.llm import load_prompt
 
@@ -12,6 +12,7 @@ class LLMModel(BaseModel, ABC):
     context_windows: dict = ...
     temperature: float = ...
     client: object = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @abstractmethod
     def prompt(
@@ -91,6 +92,3 @@ class LLMModel(BaseModel, ABC):
                 break
 
         return prompt_template.substitute(**truncated_kwargs)
-
-    class Config:
-        arbitrary_types_allowed = True

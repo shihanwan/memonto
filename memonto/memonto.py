@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field 
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
@@ -25,6 +25,7 @@ class Memonto(BaseModel):
     auto_forget: Optional[bool] = Field(
         False, description="Enable automatic forgetting of memories."
     )
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def configure(self, config: dict) -> None:
         """
@@ -132,6 +133,3 @@ class Memonto(BaseModel):
             - "image" format returns a string with the path to the png image.
         """
         return render_memory(g=self.g, format=format)
-
-    class Config:
-        arbitrary_types_allowed = True
