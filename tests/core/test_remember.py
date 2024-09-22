@@ -22,4 +22,4 @@ def test_load_memory(mock_store, id):
         debug=False,
     )
 
-    mock_store.load.assert_called_once_with(id=id, debug=False) 
+    mock_store.load.assert_called_once_with(id=id, debug=False)
