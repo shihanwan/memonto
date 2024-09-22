@@ -2,10 +2,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
-from memonto.core.commit import commit_memory
+from memonto.core.retain import commit_memory
 from memonto.core.configure import configure
-from memonto.core.fetch import fetch_memory
-from memonto.core.graph import render_memory
+from memonto.core.retrieve import fetch_memory
+from memonto.core.render import render_memory
 from memonto.core.remember import load_memory
 from memonto.core.query import query_memory_store
 from memonto.llms.base_llm import LLMModel
