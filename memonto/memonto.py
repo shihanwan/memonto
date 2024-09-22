@@ -7,7 +7,7 @@ from memonto.core.configure import configure
 from memonto.core.fetch import fetch_memory
 from memonto.core.graph import render_memory
 from memonto.core.remember import load_memory
-from memonto.core.query import query_memory_data
+from memonto.core.query import query_memory_store
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
 
@@ -93,13 +93,13 @@ class Memonto(BaseModel):
 
     def recall(self):
         """
-        Return a partial set of memories that are relevant to a context.
+        Return a text summary of partial memories that are relevant to a context.
         """
         pass
 
     def forget(self):
         """
-        Remove a memory from the memory store.
+        Remove memories from the memory store.
         """
         pass
 
@@ -113,7 +113,7 @@ class Memonto(BaseModel):
 
         :return: A list of triples (subject, predicate, object).
         """
-        return query_memory_data(store=self.store, id=id, uri=uri, query=query)
+        return query_memory_store(store=self.store, id=id, uri=uri, query=query)
 
     def render(self, format: str = "turtle") -> Union[str, dict]:
         """
