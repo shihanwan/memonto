@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field 
+from pydantic import BaseModel, ConfigDict, Field
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
