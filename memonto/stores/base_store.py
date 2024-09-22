@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class StoreModel(BaseModel, ABC):
     name: str = ...
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @abstractmethod
     def save(self) -> None:
@@ -25,6 +26,3 @@ class StoreModel(BaseModel, ABC):
         Perform a get query against the datastore for memory data.
         """
         pass
-
-    class Config:
-        arbitrary_types_allowed = True

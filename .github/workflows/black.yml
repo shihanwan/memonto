@@ -1,0 +1,42 @@
+name: Black Formatter
+
+on: 
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black
+
+      - name: Run Black formatter
+        id: black
+        run: black .
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "actions@github.com"
+          git add .
+          # Check if there are any changes to commit
+          if ! git diff --cached --quiet; then
+            git commit -m "Apply Black formatting"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+        if: ${{ steps.black.outcome == 'success' }}

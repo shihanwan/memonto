@@ -1,6 +1,6 @@
 import tiktoken
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from memonto.utils.llm import load_prompt
 
@@ -12,6 +12,7 @@ class LLMModel(BaseModel, ABC):
     context_windows: dict = ...
     temperature: float = ...
     client: object = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @abstractmethod
     def prompt(
@@ -45,7 +46,12 @@ class LLMModel(BaseModel, ABC):
 
         return default
 
-    def _fit_to_context_window(self, prompt_name: str, encoding_model: str = "cl100k_base", **kwargs) -> str:
+    def _fit_to_context_window(
+        self,
+        prompt_name: str,
+        encoding_model: str = "cl100k_base",
+        **kwargs,
+    ) -> str:
         """
         Render the a prompt template with the given keyword arguments and fit it to the model's context window.
         Prompts are truncated based on the order they are based in.
@@ -62,7 +68,7 @@ class LLMModel(BaseModel, ABC):
             encoding = tiktoken.encoding_for_model(encoding_model)
         except Exception:
             encoding = tiktoken.get_encoding(encoding_model)
-                                                   
+
         max_tokens = self._get_context_window()
         buffer = 0.2
 
@@ -86,6 +92,3 @@ class LLMModel(BaseModel, ABC):
                 break
 
         return prompt_template.substitute(**truncated_kwargs)
-
-    class Config:
-        arbitrary_types_allowed = True
