@@ -71,7 +71,7 @@ class Memonto(BaseModel):
             query=query,
             id=id,
             debug=self.debug,
-            expand_ontology=self.auto_expand,
+            auto_expand=self.auto_expand,
         )
 
     def remember(self, id: str = None) -> None:

@@ -52,13 +52,13 @@ def commit_memory(
     llm: LLMModel,
     store: StoreModel,
     query: str,
-    id: str = None,
-    debug: bool = False,
-    expand_ontology: bool = True,
+    id: str,
+    auto_expand: bool,
+    debug: bool,
 ) -> None:
     gt = g.serialize(format="turtle")
 
-    if expand_ontology:
+    if auto_expand:
         instruction = "- If there are information that is valuable but doesn't fit onto the ontology then add them as well."
         temperature = 0.5
     else:
