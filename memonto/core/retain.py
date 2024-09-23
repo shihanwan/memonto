@@ -6,11 +6,11 @@ from memonto.stores.base_store import StoreModel
 
 def execute_script(
     script: str,
-    g: Graph,
-    n: Namespace,
-    llm: LLMModel,
-    query: str,
     ontology: str,
+    namespaces: dict[str, Namespace],
+    data: Graph,
+    llm: LLMModel,
+    message: str,
     debug: bool = False,
     max_retries: int = 1,
     initial_temperature: float = 0.2,
@@ -19,7 +19,7 @@ def execute_script(
 
     while attempt < max_retries:
         try:
-            exec(script, {"g": g, "n": n})
+            exec(script, {"data": data} | namespaces)
             if debug:
                 print(f"Script executed successfully on attempt {attempt + 1}")
         except Exception as e:
@@ -35,7 +35,7 @@ def execute_script(
                 error=str(e),
                 script=script,
                 ontology=ontology,
-                user_message=query,
+                user_message=message,
             )
 
             if debug:
@@ -43,20 +43,22 @@ def execute_script(
 
         attempt += 1
 
-    return g
+    return data
 
 
-def commit_memory(
-    g: Graph,
-    n: Namespace,
+def retain_memory(
+    ontology: Graph,
+    namespaces: dict[str, Namespace],
+    data: Graph,
     llm: LLMModel,
     store: StoreModel,
-    query: str,
+    message: str,
     id: str,
     auto_expand: bool,
     debug: bool,
-) -> None:
-    gt = g.serialize(format="turtle")
+):
+    ontology = ontology.serialize(format="turtle")
+    namespaces = namespaces
 
     if auto_expand:
         instruction = "- If there are information that is valuable but doesn't fit onto the ontology then add them as well."
@@ -68,22 +70,25 @@ def commit_memory(
     script = llm.prompt(
         prompt_name="commit_to_memory",
         temperature=temperature,
-        ontology=gt,
-        user_message=query,
+        ontology=ontology,
+        user_message=message,
         instruction=instruction,
     )
 
     if debug:
-        print(script)
+        print(f"script:\n{script}\n")
 
-    g = execute_script(
+    data = execute_script(
         script=script,
-        g=g,
-        n=n,
+        ontology=ontology,
+        namespaces=namespaces,
+        data=data,
         llm=llm,
-        query=query,
-        ontology=gt,
+        message=message,
         debug=debug,
     )
 
-    store.save(g, id)
+    if debug:
+        print(f"data:\n{data.serialize(format='turtle')}\n")
+
+    store.save(data, id)

@@ -2,9 +2,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
-from memonto.core.retain import commit_memory
+from memonto.core.retain import retain_memory
 from memonto.core.configure import configure
-from memonto.core.retrieve import fetch_memory
+from memonto.core.retrieve import retrieve_memory
 from memonto.core.render import render_memory
 from memonto.core.remember import load_memory
 from memonto.core.query import query_memory_store
@@ -13,9 +13,13 @@ from memonto.stores.base_store import StoreModel
 
 
 class Memonto(BaseModel):
-    g: Graph = Field(..., description="An RDF graph representation of memories.")
-    # TODO: support multiple namespaces
-    n: Namespace = Field(..., description="Am RDF namespace for the memory.")
+    ontology: Graph = Field(..., description="Schema describing the memory ontology.")
+    namespaces: dict[str, Namespace] = Field(
+        ..., description="Namespaces used in the memory ontology."
+    )
+    data: Graph = Field(
+        default_factory=Graph, description="Data graph containing the actual memories."
+    )
     llm: Optional[LLMModel] = Field(None, description="LLM model instance.")
     store: Optional[StoreModel] = Field(None, description="Datastore instance.")
     debug: Optional[bool] = Field(False, description="Enable debug mode.")
@@ -54,7 +58,7 @@ class Memonto(BaseModel):
         """
         return configure(self, config=config)
 
-    def retain(self, query: str, id: str = None) -> None:
+    def retain(self, message: str, id: str = None) -> None:
         """
         Analyze a text for relevant information that maps onto an RDF ontology then commit them to the memory store.
 
@@ -63,16 +67,25 @@ class Memonto(BaseModel):
 
         :return: None
         """
-        return commit_memory(
-            g=self.g,
-            n=self.n,
+        return retain_memory(
+            ontology=self.ontology,
+            namespaces=self.namespaces,
+            data=self.data,
             llm=self.llm,
             store=self.store,
-            query=query,
+            message=message,
             id=id,
             debug=self.debug,
             auto_expand=self.auto_expand,
         )
+
+    def retrieve(self) -> str:
+        """
+        Return a text summary of all memories currently stored in the memory store.
+
+        :return: A text summary of the entire current memory.
+        """
+        return retrieve_memory(data=self.data, llm=self.llm)
 
     def remember(self, id: str = None) -> None:
         """
@@ -82,21 +95,7 @@ class Memonto(BaseModel):
 
         :return: None.
         """
-        self.g = load_memory(store=self.store, id=id)
-
-    def retrieve(self) -> str:
-        """
-        Return a text summary of all memories currently stored in the memory store.
-
-        :return: A text summary of the entire current memory.
-        """
-        return fetch_memory(g=self.g, llm=self.llm)
-
-    def recall(self):
-        """
-        Return a text summary of partial memories that are relevant to a context.
-        """
-        pass
+        self.data = load_memory(store=self.store, id=id)
 
     def forget(self):
         """
@@ -132,4 +131,4 @@ class Memonto(BaseModel):
             - "text" format returns a string in text format.
             - "image" format returns a string with the path to the png image.
         """
-        return render_memory(g=self.g, format=format)
+        return render_memory(g=self.data, format=format)
