@@ -81,11 +81,11 @@ class Memonto(BaseModel):
 
     def retrieve(self) -> str:
         """
-        Return a text summary of all memories currently stored in the memory store.
+        Return a text summary of all memories currently stored in context.
 
         :return: A text summary of the entire current memory.
         """
-        return retrieve_memory(data=self.data, llm=self.llm)
+        return retrieve_memory(data=self.data, llm=self.llm, id=id)
 
     def remember(self, id: str = None) -> None:
         """
@@ -95,7 +95,7 @@ class Memonto(BaseModel):
 
         :return: None.
         """
-        self.data = load_memory(store=self.store, id=id)
+        self.data = load_memory(store=self.store, id=id, debug=self.debug)
 
     def forget(self):
         """

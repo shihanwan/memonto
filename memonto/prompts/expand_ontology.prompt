@@ -1,0 +1,19 @@
+Given the following RDF graph that defines our current ontology and namespaces:
+```
+${ontology}
+```
+
+And the following user message:
+```
+${user_message}
+```
+
+Analyze the user message to find relevant information that ARE NOT ALREADY represented by the above ontology BUT SHOULD then generate Python code while adhering to these rules:
+- First identify IMPORTANT information from the user message that DOES NOT MAP to the existing ontology.
+- Second filter out the ones that are either TOO SPECIFIC or TOO SIMILAR to the existing ontology. Focus on quality rather than quantity, only having a few additions is fine.
+- Then create the script that will add them to graph `ontology` and which namespaces they best fit under.
+- NEVER generate code that initializes rdflib graph, namespaces, classes, properties, etc.
+- GENERATE Python code to expand our original ontology which is stored in a graph called `ontology`.
+- If there are no relevant information then RETURN a print an empty string and nothing else.
+- Your response should include all necessary rdflib and rdflib.namespace imports.
+- Please generate the code without using ``` or any other code formatting symbols. Return only plain text.
