@@ -84,12 +84,12 @@ def retain_memory(
             debug=debug,
         )
 
-    ontology = ontology.serialize(format="turtle")
+    str_ontology = ontology.serialize(format="turtle")
 
     script = llm.prompt(
         prompt_name="commit_to_memory",
         temperature=0.2,
-        ontology=ontology,
+        ontology=str_ontology,
         user_message=message,
     )
 
@@ -100,7 +100,7 @@ def retain_memory(
         script=script,
         exec_ctx={"data": data} | namespaces,
         message=message,
-        ontology=ontology,
+        ontology=str_ontology,
         data=data,
         llm=llm,
         debug=debug,
@@ -109,4 +109,4 @@ def retain_memory(
     if debug:
         print(f"data:\n{data.serialize(format='turtle')}\n")
 
-    store.save(data, id)
+    store.save(ontology=ontology, data=data, id=id)

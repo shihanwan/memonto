@@ -56,7 +56,7 @@ class Memonto(BaseModel):
 
         :return: None
         """
-        return configure(self, config=config)
+        self.store, self.llm = configure(config=config)
 
     def retain(self, message: str, id: str = None) -> None:
         """
@@ -95,7 +95,12 @@ class Memonto(BaseModel):
 
         :return: None.
         """
-        self.data = load_memory(store=self.store, id=id, debug=self.debug)
+        self.ontology, self.data = load_memory(
+            namespaces=self.namespaces,
+            store=self.store,
+            id=id,
+            debug=self.debug,
+        )
 
     def forget(self):
         """

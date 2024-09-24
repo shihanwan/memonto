@@ -1,6 +1,7 @@
-from rdflib import Graph, Literal, URIRef, RDF, RDFS, OWL
+from rdflib import Graph, Literal, Namespace, URIRef, RDF, RDFS, OWL
 from SPARQLWrapper import SPARQLWrapper, GET, POST, TURTLE, JSON
 from SPARQLWrapper.SPARQLExceptions import SPARQLWrapperException
+from typing import Tuple
 
 from memonto.stores.base_store import StoreModel
 
@@ -17,6 +18,7 @@ class ApacheJena(StoreModel):
         method: Literal,
         query: str,
         format: str = TURTLE,
+        debug: bool = False,
     ) -> SPARQLWrapper:
         sparql = SPARQLWrapper(url)
         sparql.setQuery(query)
@@ -25,6 +27,9 @@ class ApacheJena(StoreModel):
 
         if self.username and self.password:
             sparql.setCredentials(self.username, self.password)
+
+        if debug:
+            print(f"Query:\n{query}\n")
 
         try:
             response = sparql.query()
@@ -35,54 +40,106 @@ class ApacheJena(StoreModel):
             else:
                 return response.convert()
         except SPARQLWrapperException as e:
-            print(f"SPARQL query error: {e}")
+            if debug:
+                print(f"SPARQL query error:\n{e}\n")
         except Exception as e:
-            print(f"Generic error: {e}")
+            if debug:
+                print(f"Generic query error:\n{e}\n")
 
-    def _get_prefixes(self, g: Graph):
+    def _get_prefixes(self, g: Graph) -> list[str]:
         gt = g.serialize(format="turtle")
         return [line for line in gt.splitlines() if line.startswith("@prefix")]
 
-    def save(self, g: Graph, id: str = None, debug: bool = False) -> None:
-        triples = g.serialize(format="nt")
-        prefixes = self._get_prefixes(g)
-        prefix_block = (
-            "\n".join(prefixes).replace("@prefix", "PREFIX").replace(" .", "")
-        )
-
-        if id:
-            query = f"{prefix_block} INSERT DATA {{ GRAPH <{id}> {{{triples}}} }}"
-        else:
-            query = f"{prefix_block} INSERT DATA {{{triples}}}"
-
-        self._query(
-            url=f"{self.connection_url}/update",
-            method=POST,
-            query=query,
-        )
-
-        if debug:
-            print(g.serialize(format="turtle"))
-
-    def load(self, id: str = None, debug: bool = False) -> Graph:
-        if id:
-            query = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{id}> {{ ?s ?p ?o }} }}"
-        else:
-            query = "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }"
+    def _load(
+        self,
+        g: Graph,
+        namespaces: dict[str, Namespace],
+        id: str,
+        debug: bool,
+    ) -> Graph:
+        query = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{id}> {{ ?s ?p ?o }} }}"
 
         response = self._query(
             url=f"{self.connection_url}/sparql",
             method=POST,
             query=query,
+            debug=debug,
         )
 
-        g = Graph()
         g.parse(data=response, format="turtle")
 
-        if debug:
-            print(g.serialize(format="turtle"))
+        for p, n in namespaces.items():
+            g.bind(p, n)
 
         return g
+
+    def save(
+        self,
+        ontology: Graph,
+        data: Graph,
+        id: str = None,
+        debug: bool = False,
+    ) -> None:
+        o_triples = ontology.serialize(format="nt")
+        d_triples = data.serialize(format="nt")
+        prefixes = self._get_prefixes(ontology)
+        prefix_block = (
+            "\n".join(prefixes).replace("@prefix", "PREFIX").replace(" .", "")
+        )
+
+        if id:
+            query = f"""{prefix_block} 
+            INSERT DATA {{ 
+                GRAPH <ontology-{id}> {{{o_triples}}} 
+                GRAPH <data-{id}> {{{d_triples}}} 
+            }}"""
+        else:
+            query = f"""{prefix_block} 
+            INSERT DATA {{ 
+                GRAPH <ontology> {{{o_triples}}} 
+                GRAPH <data> {{{d_triples}}} 
+            }}"""
+
+        if debug:
+            print(f"Save query:\n{prefix_block}\n")
+
+        self._query(
+            url=f"{self.connection_url}/update",
+            method=POST,
+            query=query,
+            debug=debug,
+        )
+
+    def load(
+        self,
+        namespaces: dict[str, Namespace],
+        id: str = None,
+        debug: bool = False,
+    ) -> Tuple[Graph, Graph]:
+        ontology_id = f"ontology-{id}" if id else "ontology"
+        data_id = f"data-{id}" if id else "data"
+
+        ontology = Graph()
+        data = Graph()
+
+        ontology = self._load(
+            g=ontology,
+            namespaces=namespaces,
+            id=ontology_id,
+            debug=debug,
+        )
+        data = self._load(
+            g=data,
+            namespaces=namespaces,
+            id=data_id,
+            debug=debug,
+        )
+
+        if 1:
+            print(f"Loaded ontology:\n{ontology.serialize(format='turtle')}\n")
+            print(f"Loaded data:\n{data.serialize(format='turtle')}\n")
+
+        return ontology, data
 
     # TODO: way too specific, needs to be fixed
     def get(self, id: str, uri: URIRef, debug: bool = False) -> list:
