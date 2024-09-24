@@ -7,7 +7,7 @@ from memonto.core.configure import configure
 from memonto.core.retrieve import retrieve_memory
 from memonto.core.render import render_memory
 from memonto.core.remember import load_memory
-from memonto.core.query import query_memory_store
+from memonto.core.query import query_memory_data
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
 
@@ -118,7 +118,14 @@ class Memonto(BaseModel):
 
         :return: A list of triples (subject, predicate, object).
         """
-        return query_memory_store(store=self.store, id=id, uri=uri, query=query)
+        return query_memory_data(
+            ontology=self.ontology,
+            store=self.store,
+            id=id,
+            uri=uri,
+            query=query,
+            debug=self.debug,
+        )
 
     def render(self, format: str = "turtle") -> Union[str, dict]:
         """

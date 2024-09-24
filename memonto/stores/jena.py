@@ -100,9 +100,6 @@ class ApacheJena(StoreModel):
                 GRAPH <data> {{{d_triples}}} 
             }}"""
 
-        if debug:
-            print(f"Save query:\n{prefix_block}\n")
-
         self._query(
             url=f"{self.connection_url}/update",
             method=POST,
@@ -135,24 +132,29 @@ class ApacheJena(StoreModel):
             debug=debug,
         )
 
-        if 1:
+        if debug:
             print(f"Loaded ontology:\n{ontology.serialize(format='turtle')}\n")
             print(f"Loaded data:\n{data.serialize(format='turtle')}\n")
 
         return ontology, data
 
-    # TODO: way too specific, needs to be fixed
-    def get(self, id: str, uri: URIRef, debug: bool = False) -> list:
-        query = f"""
-        PREFIX rdf: <{RDF}>
-        PREFIX rdfs: <{RDFS}>
-        PREFIX owl: <{OWL}>
+    def get(
+        self,
+        ontology: Graph,
+        id: str,
+        uri: URIRef,
+        debug: bool = False,
+    ) -> list:
+        prefixes = self._get_prefixes(ontology)
+        prefix_block = (
+            "\n".join(prefixes).replace("@prefix", "PREFIX").replace(" .", "")
+        )
 
+        query = f"""{prefix_block}
         SELECT ?s ?p ?o WHERE {{
-            GRAPH <{id}> {{
+            GRAPH <data-{id}> {{
                 ?s ?p ?o .
-                FILTER (?o = <{str(uri)}> )
-                FILTER (?p != rdfs:domain && ?p != rdfs:range && ?p != rdfs:subClassOf)
+                FILTER (?o = <{str(uri)}> || ?s = <{str(uri)}> || ?p = <{str(uri)}>)
             }}
         }}
         """
@@ -162,6 +164,7 @@ class ApacheJena(StoreModel):
             method=GET,
             query=query,
             format=JSON,
+            debug=debug,
         )
 
         return result["results"]["bindings"]
