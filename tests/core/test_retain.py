@@ -2,7 +2,7 @@ import pytest
 from rdflib import Graph, Namespace
 from unittest.mock import ANY, MagicMock, call
 
-from memonto.core.retain import commit_memory
+from memonto.core.retain import retain_memory
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def test_commit_memory(
     user_query,
     id,
 ):
-    commit_memory(
+    retain_memory(
         g=graph,
         n=namespace,
         llm=mock_llm,
@@ -90,7 +90,7 @@ def test_commit_memory_auto_expand(
     user_query,
     id,
 ):
-    commit_memory(
+    retain_memory(
         g=graph,
         n=namespace,
         llm=mock_llm,

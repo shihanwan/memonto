@@ -1,16 +1,16 @@
 from rdflib import Graph
-from rdflib.namespace import RDF, RDFS
 
 from memonto.llms.base_llm import LLMModel
+from memonto.utils.rdf import is_rdf_schema
 
 
-def fetch_memory(g: Graph, llm: LLMModel) -> str:
-    filters = {RDFS.domain, RDFS.range, RDFS.subClassOf, RDFS.subPropertyOf}
+def retrieve_memory(data: Graph, llm: LLMModel) -> str:
     filtered_g = Graph()
 
-    for s, p, o in g:
-        if p in filters or (p == RDF.type and o == RDFS.Class):
+    for s, p, o in data:
+        if is_rdf_schema(p):
             continue
+
         filtered_g.add((s, p, o))
 
     memory = filtered_g.serialize(format="turtle")

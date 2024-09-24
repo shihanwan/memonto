@@ -4,22 +4,22 @@ from memonto.llms.base_llm import LLMModel
 from memonto.stores.base_store import StoreModel
 
 
-def execute_script(
+def run_script(
     script: str,
-    g: Graph,
-    n: Namespace,
-    llm: LLMModel,
-    query: str,
+    exec_ctx: dict,
+    message: str,
     ontology: str,
-    debug: bool = False,
+    data: Graph,
+    llm: LLMModel,
     max_retries: int = 1,
     initial_temperature: float = 0.2,
+    debug: bool = False,
 ) -> Graph:
     attempt = 0
 
     while attempt < max_retries:
         try:
-            exec(script, {"g": g, "n": n})
+            exec(script, exec_ctx)
             if debug:
                 print(f"Script executed successfully on attempt {attempt + 1}")
         except Exception as e:
@@ -35,7 +35,7 @@ def execute_script(
                 error=str(e),
                 script=script,
                 ontology=ontology,
-                user_message=query,
+                user_message=message,
             )
 
             if debug:
@@ -43,47 +43,70 @@ def execute_script(
 
         attempt += 1
 
-    return g
+    return data
 
 
-def commit_memory(
-    g: Graph,
-    n: Namespace,
+def expand_ontology(
+    ontology: Graph,
+    llm: LLMModel,
+    message: str,
+    debug: bool,
+) -> Graph:
+    script = llm.prompt(
+        prompt_name="expand_ontology",
+        temperature=0.3,
+        ontology=ontology.serialize(format="turtle"),
+        user_message=message,
+    )
+
+    # TODO: handle exceptions just like in run_script
+    exec(script, {"ontology": ontology})
+
+    return ontology
+
+
+def retain_memory(
+    ontology: Graph,
+    namespaces: dict[str, Namespace],
+    data: Graph,
     llm: LLMModel,
     store: StoreModel,
-    query: str,
+    message: str,
     id: str,
     auto_expand: bool,
     debug: bool,
-) -> None:
-    gt = g.serialize(format="turtle")
-
+):
     if auto_expand:
-        instruction = "- If there are information that is valuable but doesn't fit onto the ontology then add them as well."
-        temperature = 0.5
-    else:
-        instruction = "- NEVER generate code that adds information that DOES NOT fit onto the ontology."
-        temperature = 0.2
+        ontology = expand_ontology(
+            ontology=ontology,
+            llm=llm,
+            message=message,
+            debug=debug,
+        )
+
+    str_ontology = ontology.serialize(format="turtle")
 
     script = llm.prompt(
         prompt_name="commit_to_memory",
-        temperature=temperature,
-        ontology=gt,
-        user_message=query,
-        instruction=instruction,
+        temperature=0.2,
+        ontology=str_ontology,
+        user_message=message,
     )
 
     if debug:
-        print(script)
+        print(f"script:\n{script}\n")
 
-    g = execute_script(
+    data = run_script(
         script=script,
-        g=g,
-        n=n,
+        exec_ctx={"data": data} | namespaces,
+        message=message,
+        ontology=str_ontology,
+        data=data,
         llm=llm,
-        query=query,
-        ontology=gt,
         debug=debug,
     )
 
-    store.save(g, id)
+    if debug:
+        print(f"data:\n{data.serialize(format='turtle')}\n")
+
+    store.save(ontology=ontology, data=data, id=id)

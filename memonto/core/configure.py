@@ -1,3 +1,5 @@
+from typing import Optional, Tuple
+
 from memonto.llms.anthropic import Anthropic
 from memonto.llms.openai import OpenAI
 from memonto.llms.base_llm import LLMModel
@@ -21,13 +23,15 @@ def configure_model(model_provider: str, **config) -> LLMModel:
         raise ValueError(f"LLM model {model_provider} not found")
 
 
-def configure(self, config: dict) -> None:
+def configure(config: dict) -> Tuple[Optional[StoreModel], Optional[LLMModel]]:
+    store, llm = None, None
+
     if "store" in config:
         store_config = config["store"]
         store_provider = store_config["provider"]
         store_config = store_config["config"]
 
-        self.store = configure_store(
+        store = configure_store(
             store_provider=store_provider,
             **store_config,
         )
@@ -37,7 +41,9 @@ def configure(self, config: dict) -> None:
         model_provider = model_config["provider"]
         model_config = model_config["config"]
 
-        self.llm = configure_model(
+        llm = configure_model(
             model_provider=model_provider,
             **model_config,
         )
+
+    return store, llm

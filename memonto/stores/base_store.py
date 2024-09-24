@@ -20,6 +20,7 @@ class StoreModel(BaseModel, ABC):
         """
         pass
 
+    # TODO: this should not return None
     @abstractmethod
     def get(self) -> None:
         """
