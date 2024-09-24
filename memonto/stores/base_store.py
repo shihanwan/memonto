@@ -7,23 +7,29 @@ class StoreModel(BaseModel, ABC):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @abstractmethod
-    def save(self) -> None:
+    def save(self):
         """
         Persist the current memory to the datastore.
         """
         pass
 
     @abstractmethod
-    def load(self) -> None:
+    def load(self):
         """
         Load existing memory from datastore.
         """
         pass
 
-    # TODO: this should not return None
     @abstractmethod
-    def get(self) -> None:
+    def get(self):
         """
         Perform a get query against the datastore for memory data.
+        """
+        pass
+
+    @abstractmethod
+    def query(self):
+        """
+        Perform a raw query against the datastore for memory data.
         """
         pass

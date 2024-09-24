@@ -12,7 +12,7 @@ def query_memory_data(
     debug: bool,
 ) -> list:
     if query:
-        return store.get_raw(query=query)
+        return store.query(query=query)
     else:
         return store.get(
             ontology=ontology,

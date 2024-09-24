@@ -169,7 +169,7 @@ class ApacheJena(StoreModel):
 
         return result["results"]["bindings"]
 
-    def get_raw(self, query: str) -> list:
+    def query(self, query: str) -> list:
         result = self._query(
             url=f"{self.connection_url}/sparql",
             method=GET,
