@@ -4,20 +4,18 @@ from memonto.llms.base_llm import LLMModel
 from memonto.utils.rdf import is_rdf_schema
 
 
-def retrieve_memory(data: Graph, llm: LLMModel) -> str:
-    filtered_g = Graph()
-
-    for s, p, o in data:
-        if is_rdf_schema(p):
-            continue
-
-        filtered_g.add((s, p, o))
-
-    memory = filtered_g.serialize(format="turtle")
+def recall_memory(
+    ontology: Graph,
+    data: Graph,
+    llm: LLMModel,
+    message: str,
+    id: str,
+) -> str:
+    print(ontology.serialize(format="turtle"))
 
     summarized_memory = llm.prompt(
         prompt_name="summarize_memory",
-        memory=memory,
+        memory=data.serialize(format="turtle"),
     )
 
     return summarized_memory

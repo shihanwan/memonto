@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from memonto.core.retain import retain_memory
 from memonto.core.configure import configure
-from memonto.core.retrieve import retrieve_memory
+from memonto.core.retrieve import recall_memory
 from memonto.core.render import render_memory
 from memonto.core.remember import load_memory
 from memonto.core.query import query_memory_data
@@ -79,13 +79,19 @@ class Memonto(BaseModel):
             auto_expand=self.auto_expand,
         )
 
-    def retrieve(self) -> str:
+    def recall(self, message: str = None, id: str = None) -> str:
         """
         Return a text summary of all memories currently stored in context.
 
         :return: A text summary of the entire current memory.
         """
-        return retrieve_memory(data=self.data, llm=self.llm, id=id)
+        return recall_memory(
+            ontology=self.ontology,
+            data=self.data,
+            llm=self.llm,
+            message=message,
+            id=id,
+        )
 
     def remember(self, id: str = None) -> None:
         """
