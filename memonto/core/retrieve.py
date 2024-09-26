@@ -69,7 +69,7 @@ def _find_adjacent_triples(
     return triple_store.query(query=query, format="turtle")
 
 
-def _find_all(triple_store: TripleStoreModel, id: str = None) -> str:
+def _find_all(triple_store: TripleStoreModel) -> str:
     return triple_store.query(
         query="CONSTRUCT {?s ?p ?o .} WHERE { GRAPH ?g { ?s ?p ?o . }}",
         format="turtle",
@@ -82,9 +82,9 @@ def recall_memory(
     triple_store: TripleStoreModel,
     message: str,
     id: str,
-    debug: bool,
 ) -> str:
     if vector_store is None:
+        logger.error("Vector store is not configured.")
         raise Exception("Vector store is not configured.")
 
     if message:
@@ -110,5 +110,7 @@ def recall_memory(
         prompt_name="summarize_memory",
         memory=contextual_memory,
     )
+
+    logger.debug(f"Summarized Memory\n{summarized_memory}\n")
 
     return summarized_memory

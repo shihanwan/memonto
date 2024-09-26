@@ -92,7 +92,6 @@ class Memonto(BaseModel):
             vector_store=self.vector_store,
             message=message,
             id=self.id,
-            debug=self.debug,
             auto_expand=self.auto_expand,
         )
 
@@ -108,7 +107,6 @@ class Memonto(BaseModel):
             vector_store=self.vector_store,
             message=message,
             id=self.id,
-            debug=self.debug,
         )
 
     def remember(self) -> None:
@@ -121,9 +119,8 @@ class Memonto(BaseModel):
         """
         self.ontology, self.data = load_memory(
             namespaces=self.namespaces,
-            store=self.triple_store,
+            triple_store=self.triple_store,
             id=self.id,
-            debug=self.debug,
         )
 
     def forget(self):
@@ -148,7 +145,6 @@ class Memonto(BaseModel):
             id=self.id,
             uri=uri,
             query=query,
-            debug=self.debug,
         )
 
     def render(self, format: str = "turtle") -> Union[str, dict]:

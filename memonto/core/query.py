@@ -1,4 +1,4 @@
-from rdflib import URIRef, Graph, Namespace
+from rdflib import URIRef, Graph
 
 from memonto.stores.triple.base_store import TripleStoreModel
 
@@ -9,7 +9,6 @@ def query_memory_data(
     id: str,
     uri: URIRef,
     query: str,
-    debug: bool,
 ) -> list:
     if query:
         return store.query(query=query)
@@ -18,5 +17,4 @@ def query_memory_data(
             ontology=ontology,
             id=id,
             uri=uri,
-            debug=debug,
         )

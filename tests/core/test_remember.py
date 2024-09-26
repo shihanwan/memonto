@@ -17,7 +17,7 @@ def mock_store():
 
 def test_load_memory(mock_store, id):
     load_memory(
-        store=mock_store,
+        triple_store=mock_store,
         id=id,
         debug=False,
     )
