@@ -1,11 +1,6 @@
 import chromadb
 import json
-from chromadb.config import (
-    DEFAULT_TENANT,
-    DEFAULT_DATABASE,
-    Settings,
-)
-from pathlib import Path
+from chromadb.config import Settings
 from pydantic import model_validator
 from rdflib import Graph
 from typing import Literal
@@ -16,31 +11,38 @@ from memonto.utils.rdf import is_rdf_schema
 
 class Chroma(VectorStoreModel):
     name: str = "chroma"
-    mode: Literal["local", "remote"] = "local"
     client: chromadb.Client = None
+    mode: Literal["local", "remote"] = "local"
+    auth: Literal["basic", "token"] = "basic"
+    username: str = None
+    password: str = None
+    token: str = None
+    path: str = None
+    host: str = None
+    port: int = None
 
     @model_validator(mode="after")
     def init(self) -> "Chroma":
         if self.mode == "local":
-            # TODO: refactor this code
-            # TODO: store path as class variable
-            project_root = Path(__file__).resolve().parent.parent.parent
-            local_dir = project_root / ".local"
-            local_dir.mkdir(parents=True, exist_ok=True)
-
             self.client = chromadb.PersistentClient(
-                path=str(local_dir),
+                path=self.path,
                 settings=Settings(),
-                tenant=DEFAULT_TENANT,
-                database=DEFAULT_DATABASE,
             )
         elif self.mode == "remote":
-            # TODO: Add remote connection settings
-            self.client = chromadb.Client(
-                settings=Settings(),
-                tenant=DEFAULT_TENANT,
-                database=DEFAULT_DATABASE,
-            )
+            if self.auth == "basic":
+                self.client = chromadb.HttpClient(
+                    host=self.host,
+                    port=self.port,
+                    headers={"Authorization": f"Basic {self.username}:{self.password}"},
+                    settings=Settings(),
+                )
+            elif self.auth == "token":
+                self.client = chromadb.HttpClient(
+                    host=self.host,
+                    port=self.port,
+                    headers={"Authorization": f"Bearer {self.token}"},
+                    settings=Settings(),
+                )
         else:
             raise Exception("Invalid mode. Must be either 'local' or 'remote'.")
 
@@ -53,7 +55,7 @@ class Chroma(VectorStoreModel):
             if is_rdf_schema(p):
                 continue
 
-            # TODO: hacked af, needs fixing probably with how we save or load namespaces
+            # TODO: needs fixing probably with how we save or load namespaces
             _s = s.split("/")[-1].split("#")[-1].split(":")[-1]
             _p = p.split("/")[-1].split("#")[-1].split(":")[-1]
             _o = o.split("/")[-1].split("#")[-1].split(":")[-1]
