@@ -1,7 +1,8 @@
 from rdflib import Graph, Namespace
 
 from memonto.llms.base_llm import LLMModel
-from memonto.stores.base_store import StoreModel
+from memonto.stores.triple.base_store import TripleStoreModel
+from memonto.stores.vector.base_store import VectorStoreModel
 
 
 def run_script(
@@ -70,7 +71,8 @@ def retain_memory(
     namespaces: dict[str, Namespace],
     data: Graph,
     llm: LLMModel,
-    store: StoreModel,
+    triple_store: TripleStoreModel,
+    vector_store: VectorStoreModel,
     message: str,
     id: str,
     auto_expand: bool,
@@ -109,4 +111,5 @@ def retain_memory(
     if debug:
         print(f"data:\n{data.serialize(format='turtle')}\n")
 
-    store.save(ontology=ontology, data=data, id=id)
+    triple_store.save(ontology=ontology, data=data, id=id)
+    vector_store.save(g=data, id=id)

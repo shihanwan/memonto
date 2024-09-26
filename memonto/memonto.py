@@ -9,7 +9,8 @@ from memonto.core.render import render_memory
 from memonto.core.remember import load_memory
 from memonto.core.query import query_memory_data
 from memonto.llms.base_llm import LLMModel
-from memonto.stores.base_store import StoreModel
+from memonto.stores.triple.base_store import TripleStoreModel
+from memonto.stores.vector.base_store import VectorStoreModel
 
 
 class Memonto(BaseModel):
@@ -21,7 +22,8 @@ class Memonto(BaseModel):
         default_factory=Graph, description="Data graph containing the actual memories."
     )
     llm: Optional[LLMModel] = Field(None, description="LLM model instance.")
-    store: Optional[StoreModel] = Field(None, description="Datastore instance.")
+    triple_store: Optional[TripleStoreModel] = Field(None, description="Store triples.")
+    vector_store: Optional[VectorStoreModel] = Field(None, description="Store vectors.")
     debug: Optional[bool] = Field(False, description="Enable debug mode.")
     auto_expand: Optional[bool] = Field(
         False, description="Enable automatic expansion of the ontology."
@@ -37,12 +39,19 @@ class Memonto(BaseModel):
 
         :param config: A dictionary containing the configuration for the LLM model and the store.
             configs = {
-                "store": {
+                "triple_store": {
                     "provider": "apache_jena",
                     "config": {
                         "connection_url": "http://localhost:3030/ds/update",
                         "username": "",
                         "password": "",
+                    },
+                },
+                "vector_store": {
+                    "provider": "chroma",
+                    "config": {
+                        "mode": "local",
+                        "path": ".local/",
                     },
                 },
                 "model": {
@@ -56,7 +65,7 @@ class Memonto(BaseModel):
 
         :return: None
         """
-        self.store, self.llm = configure(config=config)
+        self.triple_store, self.vector_store, self.llm = configure(config=config)
 
     def retain(self, message: str, id: str = None) -> None:
         """
@@ -72,7 +81,8 @@ class Memonto(BaseModel):
             namespaces=self.namespaces,
             data=self.data,
             llm=self.llm,
-            store=self.store,
+            triple_store=self.triple_store,
+            vector_store=self.vector_store,
             message=message,
             id=id,
             debug=self.debug,
@@ -86,9 +96,10 @@ class Memonto(BaseModel):
         :return: A text summary of the entire current memory.
         """
         return recall_memory(
-            ontology=self.ontology,
             data=self.data,
             llm=self.llm,
+            triple_store=self.triple_store,
+            vector_store=self.vector_store,
             message=message,
             id=id,
         )
@@ -103,7 +114,7 @@ class Memonto(BaseModel):
         """
         self.ontology, self.data = load_memory(
             namespaces=self.namespaces,
-            store=self.store,
+            store=self.triple_store,
             id=id,
             debug=self.debug,
         )
@@ -126,7 +137,7 @@ class Memonto(BaseModel):
         """
         return query_memory_data(
             ontology=self.ontology,
-            store=self.store,
+            store=self.triple_store,
             id=id,
             uri=uri,
             query=query,

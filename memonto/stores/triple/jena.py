@@ -3,10 +3,10 @@ from SPARQLWrapper import SPARQLWrapper, GET, POST, TURTLE, JSON
 from SPARQLWrapper.SPARQLExceptions import SPARQLWrapperException
 from typing import Tuple
 
-from memonto.stores.base_store import StoreModel
+from memonto.stores.triple.base_store import TripleStoreModel
 
 
-class ApacheJena(StoreModel):
+class ApacheJena(TripleStoreModel):
     name: str = "apache_jena"
     connection_url: str = ...
     username: str = None
@@ -40,7 +40,7 @@ class ApacheJena(StoreModel):
             else:
                 return response.convert()
         except SPARQLWrapperException as e:
-            if debug:
+            if 1:
                 print(f"SPARQL query error:\n{e}\n")
         except Exception as e:
             if debug:
@@ -169,12 +169,15 @@ class ApacheJena(StoreModel):
 
         return result["results"]["bindings"]
 
-    def query(self, query: str) -> list:
+    def query(self, query: str, method: str = GET, format: str = JSON) -> list:
         result = self._query(
             url=f"{self.connection_url}/sparql",
-            method=GET,
+            method=method,
             query=query,
-            format=JSON,
+            format=format,
         )
 
-        return result["results"]["bindings"]
+        if format == JSON:
+            return result["results"]["bindings"]
+        else:
+            return str(result)

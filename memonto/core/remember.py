@@ -1,11 +1,11 @@
 from rdflib import Graph, Namespace
 
-from memonto.stores.base_store import StoreModel
+from memonto.stores.triple.base_store import TripleStoreModel
 
 
 def load_memory(
     namespaces: dict[str, Namespace],
-    store: StoreModel,
+    store: TripleStoreModel,
     id: str,
     debug: bool,
 ) -> Graph:

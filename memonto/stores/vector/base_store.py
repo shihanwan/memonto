@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel, ConfigDict
 
 
-class StoreModel(BaseModel, ABC):
+class VectorStoreModel(BaseModel, ABC):
     name: str = ...
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -14,22 +14,8 @@ class StoreModel(BaseModel, ABC):
         pass
 
     @abstractmethod
-    def load(self):
-        """
-        Load existing memory from datastore.
-        """
-        pass
-
-    @abstractmethod
-    def get(self):
+    def search(self):
         """
         Perform a get query against the datastore for memory data.
-        """
-        pass
-
-    @abstractmethod
-    def query(self):
-        """
-        Perform a raw query against the datastore for memory data.
         """
         pass
