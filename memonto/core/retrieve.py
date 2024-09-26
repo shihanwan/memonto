@@ -1,6 +1,9 @@
+import json
+
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
+from memonto.utils.logger import logger
 
 
 def _hydrate_triples(
@@ -96,13 +99,12 @@ def recall_memory(
             triple_store=triple_store,
             id=id,
         )
-        if debug:
-            print(f"Matched triples:\n{triples}\n")
+
+        logger.debug(f"Matched Triples\n{json.dumps(triples, indent=2)}\n")
     else:
         contextual_memory = _find_all(triple_store=triple_store, id=id)
 
-    if debug:
-        print(f"Contextual triples:\n{contextual_memory}\n")
+    logger.debug(f"Contextual Triples\n{contextual_memory}\n")
 
     summarized_memory = llm.prompt(
         prompt_name="summarize_memory",

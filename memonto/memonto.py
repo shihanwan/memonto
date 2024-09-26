@@ -1,13 +1,14 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
-from memonto.core.retain import retain_memory
 from memonto.core.configure import configure
-from memonto.core.retrieve import recall_memory
-from memonto.core.render import render_memory
-from memonto.core.remember import load_memory
+from memonto.core.init import init
 from memonto.core.query import query_memory_data
+from memonto.core.remember import load_memory
+from memonto.core.render import render_memory
+from memonto.core.retain import retain_memory
+from memonto.core.retrieve import recall_memory
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
@@ -33,6 +34,11 @@ class Memonto(BaseModel):
         False, description="Enable automatic forgetting of memories."
     )
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    @model_validator(mode="after")
+    def init(self) -> "Memonto":
+        init(debug=self.debug)
+        return self
 
     def configure(self, config: dict) -> None:
         """

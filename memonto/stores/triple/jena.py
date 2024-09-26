@@ -180,4 +180,4 @@ class ApacheJena(TripleStoreModel):
         if format == JSON:
             return result["results"]["bindings"]
         else:
-            return str(result)
+            return result.decode("utf-8")
