@@ -41,7 +41,7 @@ class ApacheJena(TripleStoreModel):
             else:
                 res = response.convert()
                 logger.debug(f"SPARQL Query Result\n{res}\n")
-                return res 
+                return res
         except SPARQLWrapperException as e:
             logger.error(f"SPARQL Query Error\n{e}\n")
         except Exception as e:

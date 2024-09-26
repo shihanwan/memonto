@@ -5,10 +5,10 @@ from typing import Optional, Union
 from memonto.core.configure import configure
 from memonto.core.init import init
 from memonto.core.query import query_memory_data
+from memonto.core.recall import recall_memory
 from memonto.core.remember import load_memory
 from memonto.core.render import render_memory
 from memonto.core.retain import retain_memory
-from memonto.core.retrieve import recall_memory
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
@@ -141,7 +141,7 @@ class Memonto(BaseModel):
         """
         return query_memory_data(
             ontology=self.ontology,
-            store=self.triple_store,
+            triple_store=self.triple_store,
             id=self.id,
             uri=uri,
             query=query,
