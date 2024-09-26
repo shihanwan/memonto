@@ -1,7 +1,4 @@
-from rdflib import Graph
-
 from memonto.llms.base_llm import LLMModel
-from memonto.utils.rdf import is_rdf_schema
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
 
@@ -70,12 +67,12 @@ def _find_adjacent_triples(
 
 
 def recall_memory(
-    data: Graph,
     llm: LLMModel,
     vector_store: VectorStoreModel,
     triple_store: TripleStoreModel,
     message: str,
     id: str,
+    debug: bool,
 ) -> str:
     if vector_store is None:
         raise Exception("Vector store is not configured.")
@@ -83,6 +80,10 @@ def recall_memory(
     matched_triples = vector_store.search(message=message, id=id)
     triples = _hydrate_triples(matched_triples, triple_store, id=id)
     contextual_memory = _find_adjacent_triples(triples, triple_store, id=id)
+
+    if debug:
+        print(f"Matched triples:\n{triples}\n")
+        print(f"Contextual triples:\n{contextual_memory}\n")
 
     summarized_memory = llm.prompt(
         prompt_name="summarize_memory",

@@ -14,6 +14,7 @@ from memonto.stores.vector.base_store import VectorStoreModel
 
 
 class Memonto(BaseModel):
+    id: Optional[str] = Field(None, description="Unique identifier for a memory group.")
     ontology: Graph = Field(..., description="Schema describing the memory ontology.")
     namespaces: dict[str, Namespace] = Field(
         ..., description="Namespaces used in the memory ontology."
@@ -67,7 +68,7 @@ class Memonto(BaseModel):
         """
         self.triple_store, self.vector_store, self.llm = configure(config=config)
 
-    def retain(self, message: str, id: str = None) -> None:
+    def retain(self, message: str) -> None:
         """
         Analyze a text for relevant information that maps onto an RDF ontology then commit them to the memory store.
 
@@ -84,27 +85,27 @@ class Memonto(BaseModel):
             triple_store=self.triple_store,
             vector_store=self.vector_store,
             message=message,
-            id=id,
+            id=self.id,
             debug=self.debug,
             auto_expand=self.auto_expand,
         )
 
-    def recall(self, message: str = None, id: str = None) -> str:
+    def recall(self, message: str = None) -> str:
         """
         Return a text summary of all memories currently stored in context.
 
         :return: A text summary of the entire current memory.
         """
         return recall_memory(
-            data=self.data,
             llm=self.llm,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
             message=message,
-            id=id,
+            id=self.id,
+            debug=self.debug,
         )
 
-    def remember(self, id: str = None) -> None:
+    def remember(self) -> None:
         """
         Load existing memories from the memory store to a memonto instance.
 
@@ -115,7 +116,7 @@ class Memonto(BaseModel):
         self.ontology, self.data = load_memory(
             namespaces=self.namespaces,
             store=self.triple_store,
-            id=id,
+            id=self.id,
             debug=self.debug,
         )
 
@@ -125,7 +126,7 @@ class Memonto(BaseModel):
         """
         pass
 
-    def query(self, id: str = None, uri: URIRef = None, query: str = None) -> list:
+    def query(self, uri: URIRef = None, query: str = None) -> list:
         """
         Perform query against the memory store to retrieve raw memory data rather than a summary.
 
@@ -138,7 +139,7 @@ class Memonto(BaseModel):
         return query_memory_data(
             ontology=self.ontology,
             store=self.triple_store,
-            id=id,
+            id=self.id,
             uri=uri,
             query=query,
             debug=self.debug,
