@@ -8,3 +8,7 @@ def is_rdf_schema(p) -> Graph:
 
 def sanitize_label(label: str) -> str:
     return label.replace("-", "_").replace(":", "_").replace(" ", "_")
+
+
+def remove_namespace(c: str) -> str:
+    return c.split("/")[-1].split("#")[-1].split(":")[-1]

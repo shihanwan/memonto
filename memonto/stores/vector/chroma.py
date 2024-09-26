@@ -6,7 +6,7 @@ from rdflib import Graph
 from typing import Literal
 
 from memonto.stores.vector.base_store import VectorStoreModel
-from memonto.utils.rdf import is_rdf_schema
+from memonto.utils.rdf import is_rdf_schema, remove_namespace
 
 
 class Chroma(VectorStoreModel):
@@ -55,10 +55,9 @@ class Chroma(VectorStoreModel):
             if is_rdf_schema(p):
                 continue
 
-            # TODO: needs fixing probably with how we save or load namespaces
-            _s = s.split("/")[-1].split("#")[-1].split(":")[-1]
-            _p = p.split("/")[-1].split("#")[-1].split(":")[-1]
-            _o = o.split("/")[-1].split("#")[-1].split(":")[-1]
+            _s = remove_namespace(str(s))
+            _p = remove_namespace(str(p))
+            _o = remove_namespace(str(o))
 
             edge = f"{_s} {_p} {_o}"
 
