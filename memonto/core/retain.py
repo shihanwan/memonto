@@ -3,6 +3,8 @@ from rdflib import Graph, Namespace
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
+from memonto.utils.decorators import require_config
+from memonto.utils.logger import logger
 
 
 def run_script(
@@ -14,18 +16,14 @@ def run_script(
     llm: LLMModel,
     max_retries: int = 1,
     initial_temperature: float = 0.2,
-    debug: bool = False,
 ) -> Graph:
     attempt = 0
 
     while attempt < max_retries:
         try:
             exec(script, exec_ctx)
-            if debug:
-                print(f"Script executed successfully on attempt {attempt + 1}")
         except Exception as e:
-            if debug:
-                print(f"Attempt {attempt + 1} to commit memory failed with error: {e}")
+            logger.debug(f"Run Script (Attempt {attempt + 1}) Failed\n{e}\n")
 
             temperature = initial_temperature * (2**attempt)
             temperature = min(temperature, 1.0)
@@ -39,8 +37,7 @@ def run_script(
                 user_message=message,
             )
 
-            if debug:
-                print(f"Generated script on attempt {attempt + 1}:\n{script}")
+            logger.debug(f"Fixed Script (Attempt {attempt + 1})\n{script}\n")
 
         attempt += 1
 
@@ -51,7 +48,6 @@ def expand_ontology(
     ontology: Graph,
     llm: LLMModel,
     message: str,
-    debug: bool,
 ) -> Graph:
     script = llm.prompt(
         prompt_name="expand_ontology",
@@ -60,12 +56,18 @@ def expand_ontology(
         user_message=message,
     )
 
+    logger.debug(f"Expand Script\n{script}\n")
+
     # TODO: handle exceptions just like in run_script
     exec(script, {"ontology": ontology})
+
+    logger.debug(f"Ontology Graph\n{ontology.serialize(format='turtle')}\n")
 
     return ontology
 
 
+@require_config("llm")
+@require_config("triple_store")
 def retain_memory(
     ontology: Graph,
     namespaces: dict[str, Namespace],
@@ -76,14 +78,12 @@ def retain_memory(
     message: str,
     id: str,
     auto_expand: bool,
-    debug: bool,
-):
+) -> None:
     if auto_expand:
         ontology = expand_ontology(
             ontology=ontology,
             llm=llm,
             message=message,
-            debug=debug,
         )
 
     str_ontology = ontology.serialize(format="turtle")
@@ -95,8 +95,7 @@ def retain_memory(
         user_message=message,
     )
 
-    if debug:
-        print(f"script:\n{script}\n")
+    logger.debug(f"Retain Script\n{script}\n")
 
     data = run_script(
         script=script,
@@ -105,11 +104,10 @@ def retain_memory(
         ontology=str_ontology,
         data=data,
         llm=llm,
-        debug=debug,
     )
 
-    if debug:
-        print(f"data:\n{data.serialize(format='turtle')}\n")
+    logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
     triple_store.save(ontology=ontology, data=data, id=id)
-    vector_store.save(g=data, id=id)
+    if vector_store:
+        vector_store.save(g=data, id=id)

@@ -1,22 +1,18 @@
-from rdflib import URIRef, Graph, Namespace
+from rdflib import URIRef, Graph
 
 from memonto.stores.triple.base_store import TripleStoreModel
+from memonto.utils.decorators import require_config
 
 
+@require_config("triple_store")
 def query_memory_data(
     ontology: Graph,
-    store: TripleStoreModel,
+    triple_store: TripleStoreModel,
     id: str,
     uri: URIRef,
     query: str,
-    debug: bool,
 ) -> list:
     if query:
-        return store.query(query=query)
+        return triple_store.query(query=query)
     else:
-        return store.get(
-            ontology=ontology,
-            id=id,
-            uri=uri,
-            debug=debug,
-        )
+        return triple_store.get(ontology=ontology, uri=uri, id=id)

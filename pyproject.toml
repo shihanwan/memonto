@@ -19,6 +19,7 @@ sparqlwrapper = "^2.0.0"
 pytest = "^8.3.3"
 anthropic = "^0.34.2"
 chromadb = "^0.5.7"
+loguru = "^0.7.2"
 
 
 [build-system]

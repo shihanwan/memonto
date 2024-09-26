@@ -1,9 +1,10 @@
-from rdflib import Graph, Literal, Namespace, URIRef, RDF, RDFS, OWL
+from rdflib import Graph, Literal, Namespace, URIRef
 from SPARQLWrapper import SPARQLWrapper, GET, POST, TURTLE, JSON
 from SPARQLWrapper.SPARQLExceptions import SPARQLWrapperException
 from typing import Tuple
 
 from memonto.stores.triple.base_store import TripleStoreModel
+from memonto.utils.logger import logger
 
 
 class ApacheJena(TripleStoreModel):
@@ -18,7 +19,6 @@ class ApacheJena(TripleStoreModel):
         method: Literal,
         query: str,
         format: str = TURTLE,
-        debug: bool = False,
     ) -> SPARQLWrapper:
         sparql = SPARQLWrapper(url)
         sparql.setQuery(query)
@@ -28,23 +28,24 @@ class ApacheJena(TripleStoreModel):
         if self.username and self.password:
             sparql.setCredentials(self.username, self.password)
 
-        if debug:
-            print(f"Query:\n{query}\n")
+        logger.debug(f"SPARQL Query\n{query}\n")
 
         try:
             response = sparql.query()
             content_type = response.info()["Content-Type"]
 
             if "html" in content_type:
-                return response.response.read().decode("utf-8")
+                res = response.response.read().decode("utf-8")
+                logger.debug(f"SPARQL Query Result\n{res}\n")
+                return res
             else:
-                return response.convert()
+                res = response.convert()
+                logger.debug(f"SPARQL Query Result\n{res}\n")
+                return res
         except SPARQLWrapperException as e:
-            if 1:
-                print(f"SPARQL query error:\n{e}\n")
+            logger.error(f"SPARQL Query Error\n{e}\n")
         except Exception as e:
-            if debug:
-                print(f"Generic query error:\n{e}\n")
+            logger.error(f"Generic Query Error\n{e}\n")
 
     def _get_prefixes(self, g: Graph) -> list[str]:
         gt = g.serialize(format="turtle")
@@ -55,7 +56,6 @@ class ApacheJena(TripleStoreModel):
         g: Graph,
         namespaces: dict[str, Namespace],
         id: str,
-        debug: bool,
     ) -> Graph:
         query = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{id}> {{ ?s ?p ?o }} }}"
 
@@ -63,7 +63,6 @@ class ApacheJena(TripleStoreModel):
             url=f"{self.connection_url}/sparql",
             method=POST,
             query=query,
-            debug=debug,
         )
 
         g.parse(data=response, format="turtle")
@@ -78,7 +77,6 @@ class ApacheJena(TripleStoreModel):
         ontology: Graph,
         data: Graph,
         id: str = None,
-        debug: bool = False,
     ) -> None:
         o_triples = ontology.serialize(format="nt")
         d_triples = data.serialize(format="nt")
@@ -104,14 +102,12 @@ class ApacheJena(TripleStoreModel):
             url=f"{self.connection_url}/update",
             method=POST,
             query=query,
-            debug=debug,
         )
 
     def load(
         self,
         namespaces: dict[str, Namespace],
         id: str = None,
-        debug: bool = False,
     ) -> Tuple[Graph, Graph]:
         ontology_id = f"ontology-{id}" if id else "ontology"
         data_id = f"data-{id}" if id else "data"
@@ -123,18 +119,15 @@ class ApacheJena(TripleStoreModel):
             g=ontology,
             namespaces=namespaces,
             id=ontology_id,
-            debug=debug,
         )
         data = self._load(
             g=data,
             namespaces=namespaces,
             id=data_id,
-            debug=debug,
         )
 
-        if debug:
-            print(f"Loaded ontology:\n{ontology.serialize(format='turtle')}\n")
-            print(f"Loaded data:\n{data.serialize(format='turtle')}\n")
+        logger.debug(f"Loaded Ontology Graph\n{ontology.serialize(format='turtle')}\n")
+        logger.debug(f"Loaded Data Graph\n{data.serialize(format='turtle')}\n")
 
         return ontology, data
 
@@ -143,7 +136,6 @@ class ApacheJena(TripleStoreModel):
         ontology: Graph,
         id: str,
         uri: URIRef,
-        debug: bool = False,
     ) -> list:
         prefixes = self._get_prefixes(ontology)
         prefix_block = (
@@ -164,7 +156,6 @@ class ApacheJena(TripleStoreModel):
             method=GET,
             query=query,
             format=JSON,
-            debug=debug,
         )
 
         return result["results"]["bindings"]
@@ -180,4 +171,4 @@ class ApacheJena(TripleStoreModel):
         if format == JSON:
             return result["results"]["bindings"]
         else:
-            return str(result)
+            return result.decode("utf-8")

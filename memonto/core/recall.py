@@ -1,6 +1,10 @@
+import json
+
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
+from memonto.utils.decorators import require_config
+from memonto.utils.logger import logger
 
 
 def _hydrate_triples(
@@ -66,24 +70,23 @@ def _find_adjacent_triples(
     return triple_store.query(query=query, format="turtle")
 
 
-def _find_all(triple_store: TripleStoreModel, id: str = None) -> str:
+def _find_all(triple_store: TripleStoreModel) -> str:
     return triple_store.query(
         query="CONSTRUCT {?s ?p ?o .} WHERE { GRAPH ?g { ?s ?p ?o . }}",
         format="turtle",
     )
 
 
+@require_config("llm")
+@require_config("triple_store")
+@require_config("vector_store")
 def recall_memory(
     llm: LLMModel,
     vector_store: VectorStoreModel,
     triple_store: TripleStoreModel,
     message: str,
     id: str,
-    debug: bool,
 ) -> str:
-    if vector_store is None:
-        raise Exception("Vector store is not configured.")
-
     if message:
         matched_triples = vector_store.search(message=message, id=id)
         triples = _hydrate_triples(
@@ -96,17 +99,18 @@ def recall_memory(
             triple_store=triple_store,
             id=id,
         )
-        if debug:
-            print(f"Matched triples:\n{triples}\n")
+
+        logger.debug(f"Matched Triples\n{json.dumps(triples, indent=2)}\n")
     else:
         contextual_memory = _find_all(triple_store=triple_store, id=id)
 
-    if debug:
-        print(f"Contextual triples:\n{contextual_memory}\n")
+    logger.debug(f"Contextual Triples\n{contextual_memory}\n")
 
     summarized_memory = llm.prompt(
         prompt_name="summarize_memory",
         memory=contextual_memory,
     )
+
+    logger.debug(f"Summarized Memory\n{summarized_memory}\n")
 
     return summarized_memory
