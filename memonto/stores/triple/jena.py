@@ -160,6 +160,15 @@ class ApacheJena(TripleStoreModel):
 
         return result["results"]["bindings"]
 
+    def delete(self, id: str = None) -> None:
+        query = f"""DROP GRAPH <ontology-{id}> ; DROP GRAPH <data-{id}> ;"""
+
+        self._query(
+            url=f"{self.connection_url}/update",
+            method=POST,
+            query=query,
+        )
+
     def query(self, query: str, method: str = GET, format: str = JSON) -> list:
         result = self._query(
             url=f"{self.connection_url}/sparql",

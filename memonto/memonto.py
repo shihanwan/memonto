@@ -4,6 +4,7 @@ from typing import Optional, Union
 
 from memonto.core.configure import configure
 from memonto.core.init import init
+from memonto.core.forget import forget_memory
 from memonto.core.query import query_memory_data
 from memonto.core.recall import recall_memory
 from memonto.core.remember import load_memory
@@ -109,6 +110,7 @@ class Memonto(BaseModel):
             id=self.id,
         )
 
+    # TODO: no longer needed, can be deprecated or removed
     def remember(self) -> None:
         """
         Load existing memories from the memory store to a memonto instance.
@@ -123,11 +125,15 @@ class Memonto(BaseModel):
             id=self.id,
         )
 
-    def forget(self):
+    def forget(self) -> None:
         """
         Remove memories from the memory store.
         """
-        pass
+        forget_memory(
+            id=self.id,
+            triple_store=self.triple_store,
+            vector_store=self.vector_store,
+        )
 
     def query(self, uri: URIRef = None, query: str = None) -> list:
         """
