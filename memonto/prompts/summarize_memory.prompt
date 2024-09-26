@@ -8,5 +8,5 @@ ${memory}
 Describe the RDF graph in one paragraph and make sure to follow these rules:
 - FOCUS on the telling a story about the who, what, where, how, etc.
 - LEAVE OUT anything not explicitly defined, do not make assumptions.
-- DO NOT describe the graph schema and DO NOT mention the graph.
+- DO NOT describe the RDF graph schema and DO NOT mention the RDF graph at all.
 - Make sure to use plain and simple English.

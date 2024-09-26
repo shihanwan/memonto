@@ -66,6 +66,13 @@ def _find_adjacent_triples(
     return triple_store.query(query=query, format="turtle")
 
 
+def _find_all(triple_store: TripleStoreModel, id: str = None) -> str:
+    return triple_store.query(
+        query="CONSTRUCT {?s ?p ?o .} WHERE { GRAPH ?g { ?s ?p ?o . }}",
+        format="turtle",
+    )
+
+
 def recall_memory(
     llm: LLMModel,
     vector_store: VectorStoreModel,
@@ -77,12 +84,24 @@ def recall_memory(
     if vector_store is None:
         raise Exception("Vector store is not configured.")
 
-    matched_triples = vector_store.search(message=message, id=id)
-    triples = _hydrate_triples(matched_triples, triple_store, id=id)
-    contextual_memory = _find_adjacent_triples(triples, triple_store, id=id)
+    if message:
+        matched_triples = vector_store.search(message=message, id=id)
+        triples = _hydrate_triples(
+            triples=matched_triples,
+            triple_store=triple_store,
+            id=id,
+        )
+        contextual_memory = _find_adjacent_triples(
+            triples=triples,
+            triple_store=triple_store,
+            id=id,
+        )
+        if debug:
+            print(f"Matched triples:\n{triples}\n")
+    else:
+        contextual_memory = _find_all(triple_store=triple_store, id=id)
 
     if debug:
-        print(f"Matched triples:\n{triples}\n")
         print(f"Contextual triples:\n{contextual_memory}\n")
 
     summarized_memory = llm.prompt(
