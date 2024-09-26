@@ -2,7 +2,7 @@ import pytest
 from rdflib import Graph
 from unittest.mock import ANY, MagicMock
 
-from memonto.core.retrieve import retrieve_memory
+from memonto.core.retrieve import recall_memory
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def mock_llm():
 
 
 def test_fetch_memory(graph, mock_llm):
-    res = retrieve_memory(data=graph, llm=mock_llm)
+    res = recall_memory(data=graph, llm=mock_llm)
 
     mock_llm.prompt.assert_called_once_with(
         prompt_name="summarize_memory",
