@@ -159,7 +159,7 @@ class Memonto(BaseModel):
             query=query,
         )
 
-    def render(self, format: str = "turtle") -> Union[str, dict]:
+    def _render(self, format: str = "turtle", path: str = None,) -> Union[str, dict]:
         """
         Return a text representation of the entire currently stored memory.
 
@@ -175,4 +175,4 @@ class Memonto(BaseModel):
             - "text" format returns a string in text format.
             - "image" format returns a string with the path to the png image.
         """
-        return render_memory(g=self.data, format=format)
+        return render_memory(g=self.data, format=format, path=path)
