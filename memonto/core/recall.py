@@ -88,19 +88,23 @@ def recall_memory(
     id: str,
 ) -> str:
     if message:
-        matched_triples = vector_store.search(message=message, id=id)
-        triples = _hydrate_triples(
-            triples=matched_triples,
-            triple_store=triple_store,
-            id=id,
-        )
-        contextual_memory = _find_adjacent_triples(
-            triples=triples,
-            triple_store=triple_store,
-            id=id,
-        )
+        try:
+            matched_triples = vector_store.search(message=message, id=id)
+            triples = _hydrate_triples(
+                triples=matched_triples,
+                triple_store=triple_store,
+                id=id,
+            )
+            contextual_memory = _find_adjacent_triples(
+                triples=triples,
+                triple_store=triple_store,
+                id=id,
+            )
 
-        logger.debug(f"Matched Triples\n{json.dumps(triples, indent=2)}\n")
+            logger.debug(f"Matched Triples\n{json.dumps(triples, indent=2)}\n")
+        except ValueError as e:
+            logger.debug(f"Recall Exception\n{e}\n")
+            contextual_memory = ""
     else:
         contextual_memory = _find_all(triple_store=triple_store, id=id)
 

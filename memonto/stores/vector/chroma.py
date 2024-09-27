@@ -78,3 +78,6 @@ class Chroma(VectorStoreModel):
         )
 
         return [json.loads(t.get("triple", "{}")) for t in matched["metadatas"][0]]
+
+    def delete(self, id: str) -> None:
+        self.client.delete_collection(id)
