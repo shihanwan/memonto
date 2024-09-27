@@ -3,7 +3,6 @@ import json
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
-from memonto.utils.decorators import require_config
 from memonto.utils.logger import logger
 
 
@@ -77,9 +76,6 @@ def _find_all(triple_store: TripleStoreModel) -> str:
     )
 
 
-@require_config("llm")
-@require_config("triple_store")
-@require_config("vector_store")
 def recall_memory(
     llm: LLMModel,
     vector_store: VectorStoreModel,

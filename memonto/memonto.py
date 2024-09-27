@@ -1,3 +1,4 @@
+import asyncio
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
@@ -13,6 +14,7 @@ from memonto.core.retain import retain_memory
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
+from memonto.utils.decorators import require_config
 
 
 class Memonto(BaseModel):
@@ -75,6 +77,7 @@ class Memonto(BaseModel):
         """
         self.triple_store, self.vector_store, self.llm = configure(config=config)
 
+    @require_config("llm", "triple_store")
     def retain(self, message: str) -> None:
         """
         Analyze a text for relevant information that maps onto an RDF ontology then commit them to the memory store.
@@ -96,6 +99,7 @@ class Memonto(BaseModel):
             auto_expand=self.auto_expand,
         )
 
+    @require_config("llm", "triple_store", "vector_store")
     def recall(self, message: str = None) -> str:
         """
         Return a text summary of all memories currently stored in context.
@@ -111,6 +115,7 @@ class Memonto(BaseModel):
         )
 
     # TODO: no longer needed, can be deprecated or removed
+    @require_config("triple_store")
     def remember(self) -> None:
         """
         Load existing memories from the memory store to a memonto instance.
@@ -135,6 +140,7 @@ class Memonto(BaseModel):
             vector_store=self.vector_store,
         )
 
+    @require_config("triple_store")
     def query(self, uri: URIRef = None, query: str = None) -> list:
         """
         Perform query against the memory store to retrieve raw memory data rather than a summary.
