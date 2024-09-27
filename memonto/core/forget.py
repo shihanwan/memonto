@@ -9,6 +9,6 @@ def forget_memory(
 ) -> None:
     if vector_store:
         vector_store.delete(id)
-    
+
     if triple_store:
         triple_store.delete(id)

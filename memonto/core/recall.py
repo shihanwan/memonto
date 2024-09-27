@@ -100,7 +100,7 @@ def recall_memory(
                 triple_store=triple_store,
                 id=id,
             )
-            
+
             logger.debug(f"Matched Triples\n{json.dumps(triples, indent=2)}\n")
         except ValueError as e:
             logger.debug(f"Recall Exception\n{e}\n")
