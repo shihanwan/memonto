@@ -8,8 +8,8 @@ from memonto.core.init import init
 from memonto.core.forget import _forget
 from memonto.core.query import _retrieve
 from memonto.core.recall import _recall
-from memonto.core.remember import load_memory
-from memonto.core.render import render_memory
+from memonto.core.remember import _remember
+from memonto.core.render import _render
 from memonto.core.retain import _retain
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
@@ -198,13 +198,17 @@ class Memonto(BaseModel):
 
         :return: None.
         """
-        self.ontology, self.data = load_memory(
+        self.ontology, self.data = _remember(
             namespaces=self.namespaces,
             triple_store=self.triple_store,
             id=self.id,
         )
 
-    def _render(self, format: str = "turtle", path: str = None,) -> Union[str, dict]:
+    def _render(
+        self,
+        format: str = "turtle",
+        path: str = None,
+    ) -> Union[str, dict]:
         """
         Return a text representation of the entire currently stored memory.
 
@@ -220,4 +224,4 @@ class Memonto(BaseModel):
             - "text" format returns a string in text format.
             - "image" format returns a string with the path to the png image.
         """
-        return render_memory(g=self.data, format=format, path=path)
+        return _render(g=self.data, format=format, path=path)

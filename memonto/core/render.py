@@ -36,7 +36,7 @@ def generate_text(g: Graph) -> str:
     return text_g
 
 
-def render_memory(g: Graph, format: str, path: str) -> str:
+def _render(g: Graph, format: str, path: str) -> str:
     if format == "turtle":
         return g.serialize(format="turtle")
     elif format == "json":

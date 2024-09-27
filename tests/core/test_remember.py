@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from memonto.core.remember import load_memory
+from memonto.core.remember import _remember
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def mock_store():
 
 
 def test_load_memory(mock_store, id):
-    load_memory(
+    _remember(
         triple_store=mock_store,
         id=id,
         debug=False,
