@@ -5,12 +5,12 @@ from typing import Optional, Union
 
 from memonto.core.configure import configure
 from memonto.core.init import init
-from memonto.core.forget import forget_memory
-from memonto.core.query import query_memory_data
-from memonto.core.recall import recall_memory
+from memonto.core.forget import _forget
+from memonto.core.query import _retrieve
+from memonto.core.recall import _recall
 from memonto.core.remember import load_memory
 from memonto.core.render import render_memory
-from memonto.core.retain import retain_memory
+from memonto.core.retain import _retain
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
@@ -87,7 +87,22 @@ class Memonto(BaseModel):
 
         :return: None
         """
-        return retain_memory(
+        return _retain(
+            ontology=self.ontology,
+            namespaces=self.namespaces,
+            data=self.data,
+            llm=self.llm,
+            triple_store=self.triple_store,
+            vector_store=self.vector_store,
+            message=message,
+            id=self.id,
+            auto_expand=self.auto_expand,
+        )
+
+    @require_config("llm", "triple_store")
+    async def aretain(self, message: str) -> None:
+        return await asyncio.to_thread(
+            _retain,
             ontology=self.ontology,
             namespaces=self.namespaces,
             data=self.data,
@@ -106,12 +121,71 @@ class Memonto(BaseModel):
 
         :return: A text summary of the entire current memory.
         """
-        return recall_memory(
+        return _recall(
             llm=self.llm,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
             message=message,
             id=self.id,
+        )
+
+    @require_config("llm", "triple_store", "vector_store")
+    async def arecall(self, message: str = None) -> str:
+        return await asyncio.to_thread(
+            _recall,
+            llm=self.llm,
+            triple_store=self.triple_store,
+            vector_store=self.vector_store,
+            message=message,
+            id=self.id,
+        )
+
+    @require_config("triple_store")
+    def retrieve(self, uri: URIRef = None, query: str = None) -> list:
+        """
+        Perform query against the memory store to retrieve raw memory data rather than a summary.
+
+        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
+        :param uri[Optional]: URI of the entity to query for.
+        :param query[Optional]: Raw query that will be performed against the datastore. If you pass in a raw query then the id and uri parameters will be ignored.
+
+        :return: A list of triples (subject, predicate, object).
+        """
+        return _retrieve(
+            ontology=self.ontology,
+            triple_store=self.triple_store,
+            id=self.id,
+            uri=uri,
+            query=query,
+        )
+
+    @require_config("triple_store")
+    async def aretrieve(self, uri: URIRef = None, query: str = None) -> list:
+        return await asyncio.to_thread(
+            _retrieve,
+            ontology=self.ontology,
+            triple_store=self.triple_store,
+            id=self.id,
+            uri=uri,
+            query=query,
+        )
+
+    def forget(self) -> None:
+        """
+        Remove memories from the memory store.
+        """
+        return _forget(
+            id=self.id,
+            triple_store=self.triple_store,
+            vector_store=self.vector_store,
+        )
+
+    async def aforget(self) -> None:
+        await asyncio.to_thread(
+            _forget,
+            id=self.id,
+            triple_store=self.triple_store,
+            vector_store=self.vector_store,
         )
 
     # TODO: no longer needed, can be deprecated or removed
@@ -128,35 +202,6 @@ class Memonto(BaseModel):
             namespaces=self.namespaces,
             triple_store=self.triple_store,
             id=self.id,
-        )
-
-    def forget(self) -> None:
-        """
-        Remove memories from the memory store.
-        """
-        forget_memory(
-            id=self.id,
-            triple_store=self.triple_store,
-            vector_store=self.vector_store,
-        )
-
-    @require_config("triple_store")
-    def query(self, uri: URIRef = None, query: str = None) -> list:
-        """
-        Perform query against the memory store to retrieve raw memory data rather than a summary.
-
-        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
-        :param uri[Optional]: URI of the entity to query for.
-        :param query[Optional]: Raw query that will be performed against the datastore. If you pass in a raw query then the id and uri parameters will be ignored.
-
-        :return: A list of triples (subject, predicate, object).
-        """
-        return query_memory_data(
-            ontology=self.ontology,
-            triple_store=self.triple_store,
-            id=self.id,
-            uri=uri,
-            query=query,
         )
 
     def _render(self, format: str = "turtle", path: str = None,) -> Union[str, dict]:

@@ -76,7 +76,7 @@ def _find_all(triple_store: TripleStoreModel) -> str:
     )
 
 
-def recall_memory(
+def _recall(
     llm: LLMModel,
     vector_store: VectorStoreModel,
     triple_store: TripleStoreModel,

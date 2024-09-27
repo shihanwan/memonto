@@ -65,7 +65,7 @@ def expand_ontology(
     return ontology
 
 
-def retain_memory(
+def _retain(
     ontology: Graph,
     namespaces: dict[str, Namespace],
     data: Graph,

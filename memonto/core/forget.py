@@ -3,7 +3,7 @@ from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
 
 
-def forget_memory(
+def _forget(
     id: str,
     triple_store: TripleStoreModel,
     vector_store: VectorStoreModel,

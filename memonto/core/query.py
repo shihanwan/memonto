@@ -3,7 +3,7 @@ from rdflib import URIRef, Graph
 from memonto.stores.triple.base_store import TripleStoreModel
 
 
-def query_memory_data(
+def _retrieve(
     ontology: Graph,
     triple_store: TripleStoreModel,
     id: str,
