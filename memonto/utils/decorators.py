@@ -4,20 +4,18 @@ from memonto.utils.exceptions import ConfigException
 from memonto.utils.logger import logger
 
 
-def require_config(config_name):
+def require_config(*config_names):
     def decorator(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            store = kwargs.get(config_name, None)
+        def wrapper(self, *args, **kwargs):
+            for config_name in config_names:
+                store = getattr(self, config_name, None)
 
-            if store is None and len(args) > 1:
-                store = getattr(args[1], config_name, None)
+                if store is None:
+                    logger.warning(f"{config_name} is not configured.")
+                    raise ConfigException(f"{config_name} is not configured.")
 
-            if store is None:
-                logger.error(f"{config_name} is not configured.")
-                raise ConfigException(f"{config_name} is not configured.")
-
-            return func(*args, **kwargs)
+            return func(self, *args, **kwargs)
 
         return wrapper
 

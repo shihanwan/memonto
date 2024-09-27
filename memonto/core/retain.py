@@ -3,7 +3,6 @@ from rdflib import Graph, Namespace
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
-from memonto.utils.decorators import require_config
 from memonto.utils.logger import logger
 
 
@@ -66,9 +65,7 @@ def expand_ontology(
     return ontology
 
 
-@require_config("llm")
-@require_config("triple_store")
-def retain_memory(
+def _retain(
     ontology: Graph,
     namespaces: dict[str, Namespace],
     data: Graph,

@@ -1,11 +1,10 @@
 import graphviz
-from pathlib import Path
 from rdflib import Graph
 
 from memonto.utils.rdf import is_rdf_schema, sanitize_label
 
 
-def generate_image(g: Graph) -> None:
+def generate_image(g: Graph, path: str) -> None:
     dot = graphviz.Digraph()
 
     for s, p, o in g:
@@ -20,14 +19,9 @@ def generate_image(g: Graph) -> None:
         dot.node(o_label, o_label)
         dot.edge(s_label, o_label, label=p_label)
 
-    project_root = Path(__file__).resolve().parent.parent
-    local_dir = project_root / ".local"
-    local_dir.mkdir(parents=True, exist_ok=True)
-    save_path = local_dir / "rdf_graph"
+    dot.render(path, format="png")
 
-    dot.render(str(save_path), format="png")
-
-    return f"{save_path}.png"
+    return f"{path}.png"
 
 
 def generate_text(g: Graph) -> str:
@@ -42,7 +36,7 @@ def generate_text(g: Graph) -> str:
     return text_g
 
 
-def render_memory(g: Graph, format: str) -> str:
+def _render(g: Graph, format: str, path: str) -> str:
     if format == "turtle":
         return g.serialize(format="turtle")
     elif format == "json":
@@ -52,6 +46,6 @@ def render_memory(g: Graph, format: str) -> str:
     elif format == "text":
         return generate_text(g)
     elif format == "image":
-        return generate_image(g)
+        return generate_image(g=g, path=path)
     else:
         raise ValueError(f"Unsupported type '{type}'.")
