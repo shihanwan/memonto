@@ -1,11 +1,11 @@
 import pytest
 from pydantic import ValidationError
-from unittest.mock import MagicMock
 
-from memonto.core.configure import configure
+from memonto.core.configure import _configure
 from memonto.llms.openai import OpenAI
 from memonto.llms.anthropic import Anthropic
-from memonto.stores.jena import ApacheJena
+from memonto.stores.triple.jena import ApacheJena
+from memonto.stores.vector.chroma import Chroma
 
 
 @pytest.fixture
@@ -34,7 +34,7 @@ def api_key():
 
 
 @pytest.fixture
-def store_provider():
+def triple_store_provider():
     return "apache_jena"
 
 
@@ -44,36 +44,26 @@ def jena_url():
 
 
 @pytest.fixture
-def mock_memonto():
-    class MockMemonto:
-        def __init__(self):
-            self.store = None
-            self.llm = None
-
-    return MagicMock(spec=MockMemonto)
+def vector_store_provider():
+    return "chroma"
 
 
-def test_configure_with_unsupported_provider(mock_memonto, api_key):
+def test_configure_with_unsupported_provider(api_key):
     config = {
         "model": {
             "provider": "random_model_provider",
             "config": {
-                "model": "randome_model_name",
+                "model": "random_model_name",
                 "api_key": api_key,
             },
         }
     }
 
     with pytest.raises(ValueError):
-        configure(self=mock_memonto, config=config)
+        _configure(config)
 
 
-def test_configure_with_openai_config(
-    mock_memonto,
-    openai_provider,
-    openai_model,
-    api_key,
-):
+def test_configure_with_openai_config(openai_provider, openai_model, api_key):
     config = {
         "model": {
             "provider": openai_provider,
@@ -84,24 +74,17 @@ def test_configure_with_openai_config(
         }
     }
 
-    configure(self=mock_memonto, config=config)
+    ts, vs, llm = _configure(config)
 
-    assert isinstance(mock_memonto.llm, OpenAI)
-    assert mock_memonto.llm.model == openai_model
-    assert mock_memonto.llm.api_key == api_key
+    assert isinstance(llm, OpenAI)
+    assert ts is None
+    assert vs is None
 
 
-def test_configure_with_bad_openai_config(
-    mock_memonto,
-    openai_provider,
-    openai_model,
-    api_key,
-):
-
+def test_configure_with_bad_openai_config(openai_provider, api_key):
     config = {
         "model": {
             "provider": openai_provider,
-            "model": openai_model,
             "config": {
                 "api_key": api_key,
             },
@@ -109,15 +92,10 @@ def test_configure_with_bad_openai_config(
     }
 
     with pytest.raises(ValidationError):
-        configure(self=mock_memonto, config=config)
+        _configure(config)
 
 
-def test_configure_with_anthropic_config(
-    mock_memonto,
-    anthropic_provider,
-    anthropic_model,
-    api_key,
-):
+def test_configure_with_anthropic_config(anthropic_provider, anthropic_model, api_key):
     config = {
         "model": {
             "provider": anthropic_provider,
@@ -128,18 +106,14 @@ def test_configure_with_anthropic_config(
         }
     }
 
-    configure(self=mock_memonto, config=config)
+    ts, vs, llm = _configure(config)
 
-    assert isinstance(mock_memonto.llm, Anthropic)
-    assert mock_memonto.llm.model == anthropic_model
-    assert mock_memonto.llm.api_key == api_key
+    assert isinstance(llm, Anthropic)
+    assert ts is None
+    assert vs is None
 
 
-def test_configure_with_bad_anthropic_config(
-    mock_memonto,
-    anthropic_provider,
-    anthropic_model,
-):
+def test_configure_with_bad_anthropic_config(anthropic_provider, anthropic_model):
     config = {
         "model": {
             "provider": anthropic_provider,
@@ -150,38 +124,30 @@ def test_configure_with_bad_anthropic_config(
     }
 
     with pytest.raises(ValidationError):
-        configure(self=mock_memonto, config=config)
+        _configure(config)
 
 
-def test_configure_with_apache_jena_config(
-    mock_memonto,
-    store_provider,
-    jena_url,
-):
+def test_configure_with_apache_jena_config(triple_store_provider, jena_url):
     config = {
-        "store": {
-            "provider": store_provider,
+        "triple_store": {
+            "provider": triple_store_provider,
             "config": {
                 "connection_url": jena_url,
             },
         },
     }
 
-    configure(self=mock_memonto, config=config)
+    ts, vs, llm = _configure(config)
 
-    assert isinstance(mock_memonto.store, ApacheJena)
-    assert mock_memonto.store.name == store_provider
-    assert mock_memonto.store.connection_url == jena_url
+    assert isinstance(ts, ApacheJena)
+    assert vs is None
+    assert llm is None
 
 
-def test_configure_with_bad_apache_jena_config(
-    mock_memonto,
-    store_provider,
-    jena_url,
-):
+def test_configure_with_bad_apache_jena_config(triple_store_provider, jena_url):
     config = {
-        "store": {
-            "provider": store_provider,
+        "triple_store": {
+            "provider": triple_store_provider,
             "config": {
                 "url": jena_url,
             },
@@ -189,4 +155,22 @@ def test_configure_with_bad_apache_jena_config(
     }
 
     with pytest.raises(ValidationError):
-        configure(self=mock_memonto, config=config)
+        _configure(config)
+
+
+def test_configure_with_chroma_config(vector_store_provider, jena_url):
+    config = {
+        "vector_store": {
+            "provider": vector_store_provider,
+            "config": {
+                "model": "local",
+                "path": ".local",
+            },
+        },
+    }
+
+    ts, vs, llm = _configure(config)
+
+    assert isinstance(vs, Chroma)
+    assert ts is None
+    assert llm is None

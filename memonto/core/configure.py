@@ -32,7 +32,7 @@ def configure_model(model_provider: str, **config) -> LLMModel:
         raise ValueError(f"LLM model {model_provider} not found")
 
 
-def configure(
+def _configure(
     config: dict,
 ) -> Tuple[Optional[TripleStoreModel], Optional[LLMModel], Optional[VectorStoreModel]]:
     triple_store, vector_store, llm = None, None, None
