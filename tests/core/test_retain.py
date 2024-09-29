@@ -12,7 +12,7 @@ def graph():
 
 @pytest.fixture
 def namespace():
-    return Namespace("http://example.org/")
+    return {"ns": Namespace("http://example.org/")}
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def id():
 @pytest.fixture
 def mock_llm():
     mock_llm = MagicMock()
-    mock_llm.prompt = MagicMock(return_value="script")
+    mock_llm.prompt = MagicMock(return_value="print('test')")
     return mock_llm
 
 
@@ -47,39 +47,69 @@ def test_commit_memory(
     id,
 ):
     _retain(
-        g=graph,
-        n=namespace,
+        ontology=graph,
+        namespaces=namespace,
+        data=graph,
         llm=mock_llm,
         triple_store=mock_store,
-        query=user_query,
+        vector_store=mock_store,
+        message=user_query,
         id=id,
         auto_expand=False,
-        debug=False,
     )
 
-    commit_to_memory = call(
+    ctm_prompt = call(
         prompt_name="commit_to_memory",
         temperature=0.2,
         ontology=ANY,
         user_message=user_query,
-        instruction=ANY,
     )
 
-    commit_to_memory_error_handling = call(
-        prompt_name="commit_to_memory_error_handling",
-        temperature=ANY,
-        error=ANY,
-        script=ANY,
+    assert mock_llm.prompt.call_count == 1
+    assert mock_llm.prompt.call_args_list == [ctm_prompt]
+
+
+def test_commit_memory_with_exception(
+    graph,
+    namespace,
+    mock_llm,
+    mock_store,
+    user_query,
+    id,
+):
+    bad_script = "abcdef"
+    mock_llm.prompt = MagicMock(return_value=bad_script)
+
+    _retain(
+        ontology=graph,
+        namespaces=namespace,
+        data=graph,
+        llm=mock_llm,
+        triple_store=mock_store,
+        vector_store=mock_store,
+        message=user_query,
+        id=id,
+        auto_expand=False,
+    )
+
+    ctm_prompt = call(
+        prompt_name="commit_to_memory",
+        temperature=0.2,
         ontology=ANY,
         user_message=user_query,
     )
 
+    ctmeh_prompt = call(
+        prompt_name="commit_to_memory_error_handling",
+        temperature=0.2,
+        error=ANY,
+        ontology=ANY,
+        script=bad_script,
+        user_message=user_query,
+    )
+
     assert mock_llm.prompt.call_count == 2
-    assert mock_llm.prompt.call_args_list == [
-        commit_to_memory,
-        commit_to_memory_error_handling,
-    ]
-    mock_store.save.assert_called_once_with(graph, id)
+    assert mock_llm.prompt.call_args_list == [ctm_prompt, ctmeh_prompt]
 
 
 def test_commit_memory_auto_expand(
@@ -91,36 +121,30 @@ def test_commit_memory_auto_expand(
     id,
 ):
     _retain(
-        g=graph,
-        n=namespace,
+        ontology=graph,
+        namespaces=namespace,
+        data=graph,
         llm=mock_llm,
         triple_store=mock_store,
-        query=user_query,
+        vector_store=mock_store,
+        message=user_query,
         id=id,
         auto_expand=True,
-        debug=False,
     )
 
-    commit_to_memory = call(
+    ctm_prompt = call(
         prompt_name="commit_to_memory",
-        temperature=0.5,
+        temperature=0.2,
         ontology=ANY,
         user_message=user_query,
-        instruction=ANY,
     )
 
-    commit_to_memory_error_handling = call(
-        prompt_name="commit_to_memory_error_handling",
-        temperature=ANY,
-        error=ANY,
-        script=ANY,
+    eo_prompt = call(
+        prompt_name="expand_ontology",
+        temperature=0.3,
         ontology=ANY,
         user_message=user_query,
     )
 
     assert mock_llm.prompt.call_count == 2
-    assert mock_llm.prompt.call_args_list == [
-        commit_to_memory,
-        commit_to_memory_error_handling,
-    ]
-    mock_store.save.assert_called_once_with(graph, id)
+    assert mock_llm.prompt.call_args_list == [eo_prompt, ctm_prompt]

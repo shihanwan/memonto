@@ -3,10 +3,10 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from rdflib import Graph, Namespace, URIRef
 from typing import Optional, Union
 
-from memonto.core.configure import configure
+from memonto.core.configure import _configure
 from memonto.core.init import init
 from memonto.core.forget import _forget
-from memonto.core.query import _retrieve
+from memonto.core.retrieve import _retrieve
 from memonto.core.recall import _recall
 from memonto.core.remember import _remember
 from memonto.core.render import _render
@@ -75,7 +75,7 @@ class Memonto(BaseModel):
 
         :return: None
         """
-        self.triple_store, self.vector_store, self.llm = configure(config=config)
+        self.triple_store, self.vector_store, self.llm = _configure(config=config)
 
     @require_config("llm", "triple_store")
     def retain(self, message: str) -> None:
