@@ -6,7 +6,7 @@ from typing import Optional, Union
 from memonto.core.configure import _configure
 from memonto.core.init import init
 from memonto.core.forget import _forget
-from memonto.core.query import _retrieve
+from memonto.core.retrieve import _retrieve
 from memonto.core.recall import _recall
 from memonto.core.remember import _remember
 from memonto.core.render import _render
