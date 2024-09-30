@@ -75,6 +75,7 @@ def _retain(
     message: str,
     id: str,
     auto_expand: bool,
+    ephemeral: bool,
 ) -> None:
     if auto_expand:
         ontology = expand_ontology(
@@ -105,6 +106,7 @@ def _retain(
 
     logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
-    triple_store.save(ontology=ontology, data=data, id=id)
-    if vector_store:
-        vector_store.save(g=data, id=id)
+    if not ephemeral:
+        triple_store.save(ontology=ontology, data=data, id=id)
+        if vector_store:
+            vector_store.save(g=data, id=id)

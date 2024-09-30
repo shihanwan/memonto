@@ -1,4 +1,5 @@
 import json
+from rdflib import Graph
 
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
@@ -77,13 +78,17 @@ def _find_all(triple_store: TripleStoreModel) -> str:
 
 
 def _recall(
+    data: Graph,
     llm: LLMModel,
     vector_store: VectorStoreModel,
     triple_store: TripleStoreModel,
     message: str,
     id: str,
+    ephemeral: bool,
 ) -> str:
-    if message:
+    if ephemeral:
+        contextual_memory = data.serialize(format="turtle")
+    elif message:
         try:
             matched_triples = vector_store.search(message=message, id=id)
             triples = _hydrate_triples(
