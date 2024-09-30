@@ -18,25 +18,19 @@ from memonto.utils.decorators import require_config
 
 
 class Memonto(BaseModel):
-    id: Optional[str] = Field(None, description="Unique identifier for a memory group.")
-    ontology: Graph = Field(..., description="Schema describing the memory ontology.")
-    namespaces: dict[str, Namespace] = Field(
-        ..., description="Namespaces used in the memory ontology."
-    )
-    data: Graph = Field(
-        default_factory=Graph, description="Data graph containing the actual memories."
-    )
-    llm: Optional[LLMModel] = Field(None, description="LLM model instance.")
-    triple_store: Optional[TripleStoreModel] = Field(None, description="Store triples.")
-    vector_store: Optional[VectorStoreModel] = Field(None, description="Store vectors.")
-    debug: Optional[bool] = Field(False, description="Enable debug mode.")
-    auto_expand: Optional[bool] = Field(
-        False, description="Enable automatic expansion of the ontology."
-    )
-    auto_forget: Optional[bool] = Field(
-        False, description="Enable automatic forgetting of memories."
-    )
+    id: Optional[str] = None
+    ontology: Graph = ...
+    namespaces: dict[str, Namespace] = ...
+    data: Graph = Field(..., default_factory=Graph)
+    llm: Optional[LLMModel] = None
+    triple_store: Optional[TripleStoreModel] = None
+    vector_store: Optional[VectorStoreModel] = None
+    auto_expand: Optional[bool] = False
+    auto_forget: Optional[bool] = False
+    ephemeral: Optional[bool] = False
+    debug: Optional[bool] = False
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
 
     @model_validator(mode="after")
     def init(self) -> "Memonto":
@@ -97,6 +91,7 @@ class Memonto(BaseModel):
             message=message,
             id=self.id,
             auto_expand=self.auto_expand,
+            ephemeral=self.ephemeral,
         )
 
     @require_config("llm", "triple_store")
@@ -112,6 +107,7 @@ class Memonto(BaseModel):
             message=message,
             id=self.id,
             auto_expand=self.auto_expand,
+            ephemeral=self.ephemeral,
         )
 
     @require_config("llm", "triple_store", "vector_store")
@@ -122,22 +118,26 @@ class Memonto(BaseModel):
         :return: A text summary of the entire current memory.
         """
         return _recall(
+            data=self.data,
             llm=self.llm,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
             message=message,
             id=self.id,
+            ephemeral=self.ephemeral,
         )
 
     @require_config("llm", "triple_store", "vector_store")
     async def arecall(self, message: str = None) -> str:
         return await asyncio.to_thread(
             _recall,
+            data=self.data,
             llm=self.llm,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
             message=message,
             id=self.id,
+            ephemeral=self.ephemeral,
         )
 
     @require_config("triple_store")
@@ -153,10 +153,12 @@ class Memonto(BaseModel):
         """
         return _retrieve(
             ontology=self.ontology,
+            data=self.data,
             triple_store=self.triple_store,
             id=self.id,
             uri=uri,
             query=query,
+            ephemeral=self.ephemeral,
         )
 
     @require_config("triple_store")
@@ -164,10 +166,12 @@ class Memonto(BaseModel):
         return await asyncio.to_thread(
             _retrieve,
             ontology=self.ontology,
+            data=self.data,
             triple_store=self.triple_store,
             id=self.id,
             uri=uri,
             query=query,
+            ephemeral=self.ephemeral,
         )
 
     def forget(self) -> None:
@@ -175,17 +179,21 @@ class Memonto(BaseModel):
         Remove memories from the memory store.
         """
         return _forget(
+            data=self.data,
             id=self.id,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
+            ephemeral=self.ephemeral,
         )
 
     async def aforget(self) -> None:
         await asyncio.to_thread(
             _forget,
+            data=self.data,
             id=self.id,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
+            ephemeral=self.ephemeral,
         )
 
     # TODO: no longer needed, can be deprecated or removed
