@@ -56,6 +56,7 @@ def test_commit_memory(
         message=user_query,
         id=id,
         auto_expand=False,
+        ephemeral=False,
     )
 
     ctm_prompt = call(
@@ -90,6 +91,7 @@ def test_commit_memory_with_exception(
         message=user_query,
         id=id,
         auto_expand=False,
+        ephemeral=False,
     )
 
     ctm_prompt = call(
@@ -130,6 +132,7 @@ def test_commit_memory_auto_expand(
         message=user_query,
         id=id,
         auto_expand=True,
+        ephemeral=False,
     )
 
     ctm_prompt = call(
