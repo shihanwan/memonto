@@ -86,7 +86,7 @@ class Memonto(BaseModel):
     @require_config("llm", "triple_store", "vector_store")
     def recall(self, context: str = None) -> str:
         """
-        Return a text summary of either all or only relevant memories currently in the memory store. In ephemeral mode, a summary of all memories will be returned. 
+        Return a text summary of either all or only relevant memories currently in the memory store. In ephemeral mode, a summary of all memories will be returned.
 
         :param context[Optional]: Context to query the memory store for relevant memories only.
 
