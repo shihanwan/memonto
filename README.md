@@ -98,7 +98,17 @@ memonto.configure(config)
 ```
 
 ## 🧰 Usage
-**ID**
+**RDF Namespaces**
+
+`memonto` supports RDF namespaces as well. Just pass in a dictionary with the namespace's name along with its `rdflib.Namespace` object.
+```python
+memonto = Memonto(
+    ontology=g,
+    namespaces={"hist": HIST},
+)
+```
+
+**Memory ID**
 
 For when you want to associate an ontology and memories to an unique `id`.
 ```python
