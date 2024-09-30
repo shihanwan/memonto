@@ -9,9 +9,27 @@ from memonto.core.retrieve import _retrieve
 def data_graph():
     g = Graph()
 
-    g.add((URIRef("http://example.org/test#subject1"), URIRef("http://example.org/test#predicate1"), Literal("object1")))
-    g.add((URIRef("http://example.org/test#subject2"), URIRef("http://example.org/test#predicate2"), Literal("object2")))
-    g.add((URIRef("http://example.org/test#subject3"), URIRef("http://example.org/test#predicate3"), Literal("object3")))
+    g.add(
+        (
+            URIRef("http://example.org/test#subject1"),
+            URIRef("http://example.org/test#predicate1"),
+            Literal("object1"),
+        )
+    )
+    g.add(
+        (
+            URIRef("http://example.org/test#subject2"),
+            URIRef("http://example.org/test#predicate2"),
+            Literal("object2"),
+        )
+    )
+    g.add(
+        (
+            URIRef("http://example.org/test#subject3"),
+            URIRef("http://example.org/test#predicate3"),
+            Literal("object3"),
+        )
+    )
 
     return g
 

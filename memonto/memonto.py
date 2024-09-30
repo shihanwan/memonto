@@ -31,7 +31,6 @@ class Memonto(BaseModel):
     debug: Optional[bool] = False
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-
     @model_validator(mode="after")
     def init(self) -> "Memonto":
         init(debug=self.debug)

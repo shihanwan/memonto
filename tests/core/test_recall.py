@@ -37,9 +37,27 @@ def mock_store():
 def data_graph():
     g = Graph()
 
-    g.add((URIRef("http://example.org/test#subject1"), URIRef("http://example.org/test#predicate1"), Literal("object1")))
-    g.add((URIRef("http://example.org/test#subject2"), URIRef("http://example.org/test#predicate2"), Literal("object2")))
-    g.add((URIRef("http://example.org/test#subject3"), URIRef("http://example.org/test#predicate3"), Literal("object3")))
+    g.add(
+        (
+            URIRef("http://example.org/test#subject1"),
+            URIRef("http://example.org/test#predicate1"),
+            Literal("object1"),
+        )
+    )
+    g.add(
+        (
+            URIRef("http://example.org/test#subject2"),
+            URIRef("http://example.org/test#predicate2"),
+            Literal("object2"),
+        )
+    )
+    g.add(
+        (
+            URIRef("http://example.org/test#subject3"),
+            URIRef("http://example.org/test#predicate3"),
+            Literal("object3"),
+        )
+    )
 
     return g
 
@@ -74,7 +92,7 @@ def test_fetch_some_memory(
     mock_store,
     user_query,
     id,
-    data_graph
+    data_graph,
 ):
     some_memory = "some memory"
     mock_find_adjacent_triples.return_value = some_memory
@@ -94,7 +112,6 @@ def test_fetch_some_memory(
         prompt_name="summarize_memory",
         memory=some_memory,
     )
-
 
 
 def test_fetch_some_memory_ephemeral(mock_llm, data_graph):
