@@ -26,7 +26,6 @@ class Memonto(BaseModel):
     triple_store: Optional[TripleStoreModel] = None
     vector_store: Optional[VectorStoreModel] = None
     auto_expand: Optional[bool] = False
-    auto_forget: Optional[bool] = False
     ephemeral: Optional[bool] = False
     debug: Optional[bool] = False
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -38,33 +37,9 @@ class Memonto(BaseModel):
 
     def configure(self, config: dict) -> None:
         """
-        Configure memonto with the desired llm model and datastore.
+        Configure memonto with the desired llm model and data stores.
 
-        :param config: A dictionary containing the configuration for the LLM model and the store.
-            configs = {
-                "triple_store": {
-                    "provider": "apache_jena",
-                    "config": {
-                        "connection_url": "http://localhost:3030/ds/update",
-                        "username": "",
-                        "password": "",
-                    },
-                },
-                "vector_store": {
-                    "provider": "chroma",
-                    "config": {
-                        "mode": "local",
-                        "path": ".local/",
-                    },
-                },
-                "model": {
-                    "provider": "openai",
-                    "config": {
-                        "model": "gpt-4o",
-                        "api_key": "",
-                    },
-                }
-            }
+        :param config: A dictionary containing the configuration for the LLM model and the data stores.
 
         :return: None
         """
@@ -73,10 +48,9 @@ class Memonto(BaseModel):
     @require_config("llm", "triple_store")
     def retain(self, message: str) -> None:
         """
-        Analyze a text for relevant information that maps onto an RDF ontology then commit them to the memory store.
+        Analyze a text for relevant information that maps onto an RDF ontology then add them to the memory store.
 
-        :param query: The user query that is broken down into a graph then committed to memory.
-        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
+        :param message: The user message that is broken down into a graph then committed to memory.
 
         :return: None
         """
@@ -110,18 +84,20 @@ class Memonto(BaseModel):
         )
 
     @require_config("llm", "triple_store", "vector_store")
-    def recall(self, message: str = None) -> str:
+    def recall(self, context: str = None) -> str:
         """
-        Return a text summary of all memories currently stored in context.
+        Return a text summary of either all or only relevant memories currently in the memory store. In ephemeral mode, a summary of all memories will be returned.
 
-        :return: A text summary of the entire current memory.
+        :param context[Optional]: Context to query the memory store for relevant memories only.
+
+        :return: A text summary of the memory.
         """
         return _recall(
             data=self.data,
             llm=self.llm,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
-            message=message,
+            message=context,
             id=self.id,
             ephemeral=self.ephemeral,
         )
@@ -142,11 +118,10 @@ class Memonto(BaseModel):
     @require_config("triple_store")
     def retrieve(self, uri: URIRef = None, query: str = None) -> list:
         """
-        Perform query against the memory store to retrieve raw memory data rather than a summary.
+        Query against the memory store to retrieve raw memory data rather than a text summary. Raw queries are not supported in ephemeral mode since there are no data stores.
 
-        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
         :param uri[Optional]: URI of the entity to query for.
-        :param query[Optional]: Raw query that will be performed against the datastore. If you pass in a raw query then the id and uri parameters will be ignored.
+        :param query[Optional]: Raw query that will be performed against the memory store. If you pass in a raw query then uri will be ignored.
 
         :return: A list of triples (subject, predicate, object).
         """
@@ -201,8 +176,6 @@ class Memonto(BaseModel):
         """
         Load existing memories from the memory store to a memonto instance.
 
-        :param id[Optional]: Unique identifier for a memory. Often associated with a unique transaction or user.
-
         :return: None.
         """
         self.ontology, self.data = _remember(
@@ -224,6 +197,7 @@ class Memonto(BaseModel):
             - "json": Return the graph in JSON-LD format.
             - "text": Return the graph in text format.
             - "image": Return the graph as a png image.
+        :param path: The path to save the image if format is "image".
 
         :return: A text representation of the memory.
             - "turtle" format returns a string in Turtle format.
