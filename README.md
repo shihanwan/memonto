@@ -55,6 +55,14 @@ g.bind("hist", HIST)
 g.add((HIST.Person, RDF.type, RDFS.Class))
 g.add((HIST.Event, RDF.type, RDFS.Class))
 g.add((HIST.Place, RDF.type, RDFS.Class))
+
+g.add((HIST.isFrom, RDF.type, RDF.Property))
+g.add((HIST.isFrom, RDFS.domain, HIST.Person))
+g.add((HIST.isFrom, RDFS.range, HIST.Place))
+
+g.add((HIST.participatesIn, RDF.type, RDF.Property))
+g.add((HIST.participatesIn, RDFS.domain, HIST.Person))
+g.add((HIST.participatesIn, RDFS.range, HIST.Event))
 ```
 
 **Configure LLM**
@@ -177,7 +185,7 @@ memonto = Memonto(
 
 Extract the relevant information from a message that maps onto your ontology. It will only extract data that matches onto an entity in your ontology.
 ```python
-memonto.retain("Otto von Bismarck was a Prussian statesman who oversaw the unification of Germany.")
+memonto.retain("Otto von Bismarck was a Prussian statesman and diplomat who oversaw the unification of Germany.")
 ```
 
 ### Recall
