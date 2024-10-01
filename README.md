@@ -71,7 +71,7 @@ config = {
     "triple_store": {
         "provider": "apache_jena",
         "config": {
-            "connection_url": "http://localhost:8080/",
+            "connection_url": "http://localhost:8080/dataset_name",
         },
     },
     "vector_store": {
@@ -182,6 +182,20 @@ async def main():
     await memonto.aretrieve(uri=HIST.Person)
     await memonto.aforget()
 ```
+
+## 🔧 Additional Setup
+
+**Apache Jena**
+1. Download Apache Jena Fuseki [here](https://jena.apache.org/download/index.cgi#apache-jena-fuseki).
+2. Unzip to desired folder.
+```sh
+tar -xzf apache-jena-fuseki-X.Y.Z.tar.gz
+```
+3. Run a local server.
+```sh
+./fuseki-server --port=8080
+```
+
 
 ## 🔮 Current and Upcoming
 
