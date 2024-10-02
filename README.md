@@ -107,7 +107,7 @@ memonto.configure(config)
 
 ### Triple Store Mode
 
-A triple store enables the persistent storage of memory data. Currently supports Apache Jena Fuseki as a triple store.
+A triple store enables the persistent storage of memory data. Currently supports Apache Jena Fuseki as a triple store. To configure a triple store, add `triple_store` to the top level of your `config` dictionary.
 
 **Install Apache Jena Fuseki**
 1. Download Apache Jena Fuseki [here](https://jena.apache.org/download/index.cgi#apache-jena-fuseki).
@@ -129,54 +129,54 @@ config = {
             "connection_url": "http://localhost:8080/dataset_name",
         },
     },
-    "model": {
-        "provider": "openai",
-        "config": {
-            "model": "gpt-4o",
-            "api_key": "api-key",
-        },
-    }
 }
-
-memonto = Memonto(
-    ontology=g,
-    namespaces={"hist": HIST},
-)
-memonto.configure(config)
 ```
 
 ### Triple + Vector Stores Mode
 
-A vector store enables contextual retrieval of memory data, it must be used in conjunction with a triple store. Currently supports Chroma as a vector store. 
+A vector store enables contextual retrieval of memory data, it must be used in conjunction with a triple store. Currently supports Chroma as a vector store. To configure a vector store, add `vector_store` to the top level of your `config` dictionary.
+
+**Configure Local Vector Store**
 ```python
 config = {
-    "triple_store": {
-        "provider": "apache_jena",
-        "config": {
-            "connection_url": "http://localhost:8080/dataset_name",
-        },
-    },
     "vector_store": {
         "provider": "chroma",
         "config": {
-            "mode": "local", 
+            "mode": "remote", 
             "path": ".local",
         },
     },
-    "model": {
-        "provider": "openai",
-        "config": {
-            "model": "gpt-4o",
-            "api_key": "api-key",
-        },
-    }
 }
-
-memonto = Memonto(
-    ontology=g,
-    namespaces={"hist": HIST},
-)
-memonto.configure(config)
+```
+**Configure Remote Vector Store**
+```python
+config = {
+    "vector_store": {
+        "provider": "chroma",
+        "config": {
+            "mode": "remote", 
+            "auth": "basic",
+            "host": "localhost",
+            "port": "8080"
+            "token": "bearer_token"
+        },
+    },
+}
+```
+```python
+config = {
+    "vector_store": {
+        "provider": "chroma",
+        "config": {
+            "mode": "remote", 
+            "auth": "token",
+            "host": "localhost",
+            "port": "8080"
+            "username": "admin"
+            "passport": "admin1"
+        },
+    },
+}
 ```
 
 ## 🧰 Usage
