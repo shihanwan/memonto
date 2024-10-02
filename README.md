@@ -1,31 +1,35 @@
 # MemOnto 🧠
 
-`memonto` (_memory + ontology_) adds memory to AI agents based on an user defined ontology. Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib) then have `memonto` automatically extract information that maps onto that ontology into a memory graph. The memories in the memory graph can be queried directly with `SPARQL` queries or contextually summarized.
+<p align="center">
+    <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner.png" alt="logo"/>
+</p>
+
+`memonto` (_memory + ontology_) adds memory to AI agents based on custom defined ontology. Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib) then have `memonto` automatically extract information that maps onto that ontology into a memory graph. The memories in the memory graph can be queried directly with `SPARQL` queries or contextually summarized.
 
 ```
-┌─────────────────────────────┐  ┌──────────────────────┐  ┌───────────────────────────────────┐
-│ Message                     │  │ LLM                  │  │ Memory Graph                      │
-│                             │  │                      │  │                ...                │
-│ {Otto von Bismarck was a    │  │                      │  │                 │                 │
-│  Prussian statesman and     │  │                      │  │ ┌───────────────▼───────────────┐ │
-│  diplomat who oversaw the   │  │ [Otto von Bismarck]  │  │ │ Otto von Bismarck             │ │
-│  unification of Germany...} ┼──►                      │  │ └────────┬──────┬───────────────┘ │
-│                             │  │ is a [Person] who    │  │          │      │                 │
-└─────────────────────────────┘  │                      ┼──►   livesAt│      │partOf           │
-┌─────────────────────────────┐  │ lives in a [Place]   │  │          │      │                 │
-│ Ontology                    │  │                      │  │ ┌────────▼┐┌────▼───────────────┐ │
-│                             ┼──► called [Prussia]     │  │ │ Prussia ││ German Unification │ │
-│       ┌─────────────┐       │  │                      │  │ └─┬─────┬─┘└──────┬─────┬───────┘ │
-│       │ Person      │       │  │ and participated in  │  │   │     │         │     │         │
-│       └───┬─────┬───┘       │  │                      │  │   ▼     ▼         ▼     ▼         │
-│           │     │           │  │ an [Event] called    │  │  ...   ...       ...   ...        │
-│    livesAt│     │partOf     │  │                      │  └─────────────────┬─────────────────┘
-│           │     │           │  │ [German Unification] │                    │                  
-│ ┌─────────▼─┐ ┌─▼─────────┐ │  │                      │  ┌─────────────────▼─────────────────┐
-│ │ Place     │ │ Event     │ │  │                      │  │                                   │
-│ └───────────┘ └───────────┘ │  │                      │  │ SPARQL Queries / Memory Summaries │
-│                             │  │                      │  │                                   │
-└─────────────────────────────┘  └──────────────────────┘  └───────────────────────────────────┘
+┌─────────────────────────────┐ ┌──────────────────────┐ ┌─────────────────────────────────┐
+│ Message                     │ │ LLM                  │ │ Memory Graph                    │
+│                             │ │                      │ │               ...               │
+│ {Otto von Bismarck was a    │ │                      │ │                │                │
+│  Prussian statesman and     │ │                      │ │┌───────────────▼───────────────┐│
+│  diplomat who oversaw the   │ │ [Otto von Bismarck]  │ ││ Otto von Bismarck             ││
+│  unification of Germany...} ┼─►                      │ │└────────┬──────┬───────────────┘│
+│                             │ │ is a [Person] who    │ │         │      │                │
+└─────────────────────────────┘ │                      ┼─►  livesAt│      │partOf          │
+┌─────────────────────────────┐ │ lives in a [Place]   │ │         │      │                │
+│ Ontology                    │ │                      │ │┌────────▼┐┌────▼───────────────┐│
+│                             ┼─► called [Prussia]     │ ││ Prussia ││ German Unification ││
+│       ┌─────────────┐       │ │                      │ │└─┬─────┬─┘└──────┬─────┬───────┘│
+│       │ Person      │       │ │ and participated in  │ │  │     │         │     │        │
+│       └───┬─────┬───┘       │ │                      │ │  ▼     ▼         ▼     ▼        │
+│           │     │           │ │ an [Event] called    │ │ ...   ...       ...   ...       │
+│    livesAt│     │partOf     │ │                      │ └─────────────────┬───────────────┘
+│           │     │           │ │ [German Unification] │                   │                
+│ ┌─────────▼─┐ ┌─▼─────────┐ │ │                      │ ┌─────────────────▼───────────────┐
+│ │ Place     │ │ Event     │ │ │                      │ │                                 │
+│ └───────────┘ └───────────┘ │ │                      │ │ SPARQL Queries / Memory Summary │
+│                             │ │                      │ │                                 │
+└─────────────────────────────┘ └──────────────────────┘ └─────────────────────────────────┘
 ```
 
 ## 🚀 Install
@@ -55,6 +59,14 @@ g.bind("hist", HIST)
 g.add((HIST.Person, RDF.type, RDFS.Class))
 g.add((HIST.Event, RDF.type, RDFS.Class))
 g.add((HIST.Place, RDF.type, RDFS.Class))
+
+g.add((HIST.isFrom, RDF.type, RDF.Property))
+g.add((HIST.isFrom, RDFS.domain, HIST.Person))
+g.add((HIST.isFrom, RDFS.range, HIST.Place))
+
+g.add((HIST.participatesIn, RDF.type, RDF.Property))
+g.add((HIST.participatesIn, RDFS.domain, HIST.Person))
+g.add((HIST.participatesIn, RDFS.range, HIST.Event))
 ```
 
 **Configure LLM**
@@ -177,7 +189,7 @@ memonto = Memonto(
 
 Extract the relevant information from a message that maps onto your ontology. It will only extract data that matches onto an entity in your ontology.
 ```python
-memonto.retain("Otto von Bismarck was a Prussian statesman who oversaw the unification of Germany.")
+memonto.retain("Otto von Bismarck was a Prussian statesman and diplomat who oversaw the unification of Germany.")
 ```
 
 ### Recall
