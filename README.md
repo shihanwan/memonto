@@ -18,8 +18,9 @@
 
 `memonto` (_memory + ontology_) adds memory to AI agents based on your custom defined ontology. 
 - Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib).
-- `memonto` automatically extracts information that maps onto that ontology into a memory graph.
-- The memories can then be queried directly with `SPARQL` queries or contextually summarized.
+- `memonto` automatically extracts information that maps onto that ontology into a memory graph (triple store).
+- Memory data can be queried directly with `SPARQL` returning a list of matching triples (subject > predicate > object).
+- Memories can also be contextually summarized with the addition of a vector store.
 
 ```
 ┌─────────────────────────────┐ ┌──────────────────────┐ ┌─────────────────────────────────┐
