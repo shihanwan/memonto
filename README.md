@@ -1,7 +1,19 @@
-# MemOnto 🧠
+# memonto 🧠
 
 <p align="center">
-    <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner.png" alt="logo"/>
+    <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner-v2.png" alt="logo"/>
+</p>
+
+<p align="center">
+    <a href="https://pypi.org/project/memonto/">
+        <img src="https://img.shields.io/pypi/v/memonto?color=blue" alt="memonto-pypi">
+    </a>
+    <a href="https://pypi.org/project/memonto/">
+        <img src="https://img.shields.io/pypi/dd/memonto?color=blue" alt="memonto-downloads">
+    </a>
+    <a href="https://opensource.org/licenses/Apache-2.0">
+        <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="memonto-license">
+    </a>
 </p>
 
 `memonto` (_memory + ontology_) adds memory to AI agents based on custom defined ontology. Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib) then have `memonto` automatically extract information that maps onto that ontology into a memory graph. The memories in the memory graph can be queried directly with `SPARQL` queries or contextually summarized.
