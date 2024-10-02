@@ -4,7 +4,7 @@
     <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner.png" alt="logo"/>
 </p>
 
-`memonto` (_memory + ontology_) adds memory to AI agents based on an user defined ontology. Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib) then have `memonto` automatically extract information that maps onto that ontology into a memory graph. The memories in the memory graph can be queried directly with `SPARQL` queries or contextually summarized.
+`memonto` (_memory + ontology_) adds memory to AI agents based on custom defined ontology. Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib) then have `memonto` automatically extract information that maps onto that ontology into a memory graph. The memories in the memory graph can be queried directly with `SPARQL` queries or contextually summarized.
 
 ```
 ┌─────────────────────────────┐ ┌──────────────────────┐ ┌─────────────────────────────────┐
