@@ -12,10 +12,10 @@ ${user_message}
 
 Analyze the user message to find AS MUCH relevant information AS POSSIBLE that could fit onto the above ontology then generate the Python code while adhering to these rules:
 - First find all the information in the user message that maps onto the above ontology.
-- Then create the script that will add them to graph `data` and which namespaces they best fit under.
-- NEVER generate code that initializes rdflib graph, namespaces, classes, properties, etc.
-- ASSUME the custom namespaces are already defined but still import the generic namespaces like rdf, etc.
+- Then apply only the existing namespaces to the new information.
+- Finally create the script that will add them to graph `data`.
+- NEVER generate code that initializes new graphs, namespaces, classes, properties, etc.
 - GENERATE Python code to add the triples with the relevant information assuming rdflib Graph `data` and the newly added namespaces already exists.
+- GENERATE all necessary rdflib and rdflib.namespace imports for the code to run.
 - If there are no relevant information then RETURN a print an empty string and nothing else.
-- Your response should include all necessary rdflib and rdflib.namespace imports.
 - Please generate the code without using ``` or any other code formatting symbols. Return only plain text.
