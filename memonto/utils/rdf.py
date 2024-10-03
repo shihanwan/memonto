@@ -22,7 +22,7 @@ def generate_image(g: Graph, path: str = None) -> None:
     if not path:
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         current_directory = os.getcwd()
-        local_directory = os.path.join(current_directory, '.local')
+        local_directory = os.path.join(current_directory, ".local")
         path = os.path.join(local_directory, f"data-graph-{current_time}")
 
     dot = graphviz.Digraph()
