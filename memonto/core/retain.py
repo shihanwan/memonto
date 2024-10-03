@@ -4,6 +4,7 @@ from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
+from memonto.utils.rdf import _render
 
 
 def run_script(
@@ -110,3 +111,6 @@ def _retain(
         triple_store.save(ontology=ontology, data=data, id=id)
         if vector_store:
             vector_store.save(g=data, id=id)
+
+        # _render(g=data, format="image")
+        data.remove((None, None, None))

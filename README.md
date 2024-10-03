@@ -1,10 +1,26 @@
-# MemOnto 🧠
+# memonto 🧠
 
 <p align="center">
-    <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner.png" alt="logo"/>
+    <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner-v2.png" alt="logo"/>
 </p>
 
-`memonto` (_memory + ontology_) adds memory to AI agents based on custom defined ontology. Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib) then have `memonto` automatically extract information that maps onto that ontology into a memory graph. The memories in the memory graph can be queried directly with `SPARQL` queries or contextually summarized.
+<p align="center">
+    <a href="https://pypi.org/project/memonto/">
+        <img src="https://img.shields.io/pypi/v/memonto?color=blue" alt="memonto-pypi">
+    </a>
+    <a href="https://pypi.org/project/memonto/">
+        <img src="https://img.shields.io/pypi/dd/memonto?color=blue" alt="memonto-downloads">
+    </a>
+    <a href="https://opensource.org/licenses/Apache-2.0">
+        <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="memonto-license">
+    </a>
+</p>
+
+`memonto` (_memory + ontology_) adds memory to AI agents based on your custom defined ontology. 
+- Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib).
+- `memonto` automatically extracts information that maps onto that ontology into a memory graph (triple store).
+- Memory data can be queried directly with `SPARQL` returning a list of matching triples (subject > predicate > object).
+- Memories can also be contextually summarized with the addition of a vector store.
 
 ```
 ┌─────────────────────────────┐ ┌──────────────────────┐ ┌─────────────────────────────────┐
@@ -91,7 +107,7 @@ memonto.configure(config)
 
 ### Triple Store Mode
 
-A triple store enables the persistent storage of memory data. Currently supports Apache Jena Fuseki as a triple store.
+A triple store enables the persistent storage of memory data. Currently supports Apache Jena Fuseki as a triple store. To configure a triple store, add `triple_store` to the top level of your `config` dictionary.
 
 **Install Apache Jena Fuseki**
 1. Download Apache Jena Fuseki [here](https://jena.apache.org/download/index.cgi#apache-jena-fuseki).
@@ -113,54 +129,54 @@ config = {
             "connection_url": "http://localhost:8080/dataset_name",
         },
     },
-    "model": {
-        "provider": "openai",
-        "config": {
-            "model": "gpt-4o",
-            "api_key": "api-key",
-        },
-    }
 }
-
-memonto = Memonto(
-    ontology=g,
-    namespaces={"hist": HIST},
-)
-memonto.configure(config)
 ```
 
 ### Triple + Vector Stores Mode
 
-A vector store enables contextual retrieval of memory data, it must be used in conjunction with a triple store. Currently supports Chroma as a vector store. 
+A vector store enables contextual retrieval of memory data, it must be used in conjunction with a triple store. Currently supports Chroma as a vector store. To configure a vector store, add `vector_store` to the top level of your `config` dictionary.
+
+**Configure Local Vector Store**
 ```python
 config = {
-    "triple_store": {
-        "provider": "apache_jena",
-        "config": {
-            "connection_url": "http://localhost:8080/dataset_name",
-        },
-    },
     "vector_store": {
         "provider": "chroma",
         "config": {
-            "mode": "local", 
+            "mode": "remote", 
             "path": ".local",
         },
     },
-    "model": {
-        "provider": "openai",
-        "config": {
-            "model": "gpt-4o",
-            "api_key": "api-key",
-        },
-    }
 }
-
-memonto = Memonto(
-    ontology=g,
-    namespaces={"hist": HIST},
-)
-memonto.configure(config)
+```
+**Configure Remote Vector Store**
+```python
+config = {
+    "vector_store": {
+        "provider": "chroma",
+        "config": {
+            "mode": "remote", 
+            "auth": "basic",
+            "host": "localhost",
+            "port": "8080"
+            "token": "bearer_token"
+        },
+    },
+}
+```
+```python
+config = {
+    "vector_store": {
+        "provider": "chroma",
+        "config": {
+            "mode": "remote", 
+            "auth": "token",
+            "host": "localhost",
+            "port": "8080"
+            "username": "admin"
+            "passport": "admin1"
+        },
+    },
+}
 ```
 
 ## 🧰 Usage

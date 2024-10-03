@@ -1,7 +1,7 @@
 import asyncio
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from rdflib import Graph, Namespace, URIRef
-from typing import Optional, Union
+from typing import Optional
 
 from memonto.core.configure import _configure
 from memonto.core.init import init
@@ -9,7 +9,6 @@ from memonto.core.forget import _forget
 from memonto.core.retrieve import _retrieve
 from memonto.core.recall import _recall
 from memonto.core.remember import _remember
-from memonto.core.render import _render
 from memonto.core.retain import _retain
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
@@ -183,26 +182,3 @@ class Memonto(BaseModel):
             triple_store=self.triple_store,
             id=self.id,
         )
-
-    def _render(
-        self,
-        format: str = "turtle",
-        path: str = None,
-    ) -> Union[str, dict]:
-        """
-        Return a text representation of the entire currently stored memory.
-
-        :param format: The format in which to render the graph. Supported formats are:
-            - "turtle": Return the graph in Turtle format.
-            - "json": Return the graph in JSON-LD format.
-            - "text": Return the graph in text format.
-            - "image": Return the graph as a png image.
-        :param path: The path to save the image if format is "image".
-
-        :return: A text representation of the memory.
-            - "turtle" format returns a string in Turtle format.
-            - "json" format returns a dictionary in JSON-LD format.
-            - "text" format returns a string in text format.
-            - "image" format returns a string with the path to the png image.
-        """
-        return _render(g=self.data, format=format, path=path)
