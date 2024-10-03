@@ -14,6 +14,7 @@ Analyze the user message to find AS MUCH relevant information AS POSSIBLE that c
 - First find all the information in the user message that maps onto the above ontology.
 - Then create the script that will add them to graph `data` and which namespaces they best fit under.
 - NEVER generate code that initializes rdflib graph, namespaces, classes, properties, etc.
+- ASSUME the custom namespaces are already defined but still import the generic namespaces like rdf, etc.
 - GENERATE Python code to add the triples with the relevant information assuming rdflib Graph `data` and the newly added namespaces already exists.
 - If there are no relevant information then RETURN a print an empty string and nothing else.
 - Your response should include all necessary rdflib and rdflib.namespace imports.

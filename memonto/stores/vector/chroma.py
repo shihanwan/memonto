@@ -6,6 +6,7 @@ from rdflib import Graph
 from typing import Literal
 
 from memonto.stores.vector.base_store import VectorStoreModel
+from memonto.utils.logger import logger
 from memonto.utils.rdf import is_rdf_schema, remove_namespace
 
 
@@ -70,17 +71,26 @@ class Chroma(VectorStoreModel):
             ids.append(f"{s}-{p}-{o}")
 
         if documents:
-            collection.add(documents=documents, metadatas=metadatas, ids=ids)
+            try:
+                collection.add(documents=documents, metadatas=metadatas, ids=ids)
+            except Exception as e:
+                logger.error(f"Chroma Save\n{e}\n")
 
     def search(self, message: str, id: str = None, k: int = 3) -> list[dict]:
         collection = self.client.get_collection(id or "default")
 
-        matched = collection.query(
-            query_texts=[message],
-            n_results=k,
-        )
+        try:
+            matched = collection.query(
+                query_texts=[message],
+                n_results=k,
+            )
+        except Exception as e:
+            logger.error(f"Chroma Search\n{e}\n")
 
         return [json.loads(t.get("triple", "{}")) for t in matched["metadatas"][0]]
 
     def delete(self, id: str) -> None:
-        self.client.delete_collection(id)
+        try:
+            self.client.delete_collection(id)
+        except Exception as e:
+            logger.error(f"Chroma Delete\n{e}\n")
