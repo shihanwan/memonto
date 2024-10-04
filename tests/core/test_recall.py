@@ -97,7 +97,7 @@ def test_fetch_some_memory(
 ):
     some_memory = "some memory"
     mock_find_adjacent_triples.return_value = some_memory
-    mock_hydrate_triples.return_value = []
+    mock_hydrate_triples.return_value = Graph()
 
     _recall(
         data=data_graph,
