@@ -1,13 +1,18 @@
 You are trying to describe the following RDF graph in plain English.
 
-Here is the the RDF graph:
+Here is the user message which serves as context:
+```
+${context}
+```
+
+And here is the RDF graph that contains information relvant to the context:
 ```
 ${memory}
 ```
 
-Describe the RDF graph in one paragraph and make sure to follow these rules:
+Summarize the user message and the RDF graph in one paragraph while following these rules:
 - FOCUS on the telling a story about the who, what, where, how, etc.
 - LEAVE OUT anything not explicitly defined, do not make assumptions.
-- DO NOT describe the RDF graph schema and DO NOT mention the RDF graph at all.
+- DO NOT mention the RDF graph schema and DO NOT mention the RDF graph at all.
 - If the RDF graph is empty then just return that there are currently no stored memory.
 - Make sure to use plain and simple English.
