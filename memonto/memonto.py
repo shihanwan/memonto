@@ -96,20 +96,20 @@ class Memonto(BaseModel):
             llm=self.llm,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
-            message=context,
+            context=context,
             id=self.id,
             ephemeral=self.ephemeral,
         )
 
     @require_config("llm", "triple_store", "vector_store")
-    async def arecall(self, message: str = None) -> str:
+    async def arecall(self, context: str = None) -> str:
         return await asyncio.to_thread(
             _recall,
             data=self.data,
             llm=self.llm,
             triple_store=self.triple_store,
             vector_store=self.vector_store,
-            message=message,
+            context=context,
             id=self.id,
             ephemeral=self.ephemeral,
         )

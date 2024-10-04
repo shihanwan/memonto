@@ -82,38 +82,41 @@ def _recall(
     llm: LLMModel,
     vector_store: VectorStoreModel,
     triple_store: TripleStoreModel,
-    message: str,
+    context: str,
     id: str,
     ephemeral: bool,
 ) -> str:
     if ephemeral:
-        contextual_memory = data.serialize(format="turtle")
-    elif message:
+        memory = data.serialize(format="turtle")
+    elif context:
         try:
-            matched_triples = vector_store.search(message=message, id=id)
+            matched_triples = vector_store.search(message=context, id=id)
+
             triples = _hydrate_triples(
                 triples=matched_triples,
                 triple_store=triple_store,
                 id=id,
             )
-            contextual_memory = _find_adjacent_triples(
+            logger.debug(f"Matched Triples\n{json.dumps(triples, indent=2)}\n")
+
+            memory = _find_adjacent_triples(
                 triples=triples,
                 triple_store=triple_store,
                 id=id,
             )
-
-            logger.debug(f"Matched Triples\n{json.dumps(triples, indent=2)}\n")
+            logger.debug(f"Adjacent Triples\n{memory}\n")
         except ValueError as e:
             logger.debug(f"Recall Exception\n{e}\n")
-            contextual_memory = ""
+            memory = ""
     else:
-        contextual_memory = _find_all(triple_store=triple_store, id=id)
+        memory = _find_all(triple_store=triple_store, id=id)
 
-    logger.debug(f"Contextual Triples\n{contextual_memory}\n")
+    logger.debug(f"Contextual Triples\n{memory}\n")
 
     summarized_memory = llm.prompt(
         prompt_name="summarize_memory",
-        memory=contextual_memory,
+        context=context,
+        memory=memory,
     )
 
     logger.debug(f"Summarized Memory\n{summarized_memory}\n")
