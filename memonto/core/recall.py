@@ -104,7 +104,7 @@ def _find_adjacent_triples(
             if formatted_subject not in explored_nodes:
                 temp_new_nodes_set.add(formatted_subject)
                 explored_nodes.add(formatted_subject)
-            
+
             if formatted_object not in explored_nodes:
                 temp_new_nodes_set.add(formatted_object)
                 explored_nodes.add(formatted_object)
