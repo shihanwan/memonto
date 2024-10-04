@@ -72,13 +72,14 @@ def test_fetch_all_memory(mock_find_all, mock_llm, mock_store, id, data_graph):
         llm=mock_llm,
         vector_store=mock_store,
         triple_store=mock_store,
-        message=None,
+        context=None,
         id=id,
         ephemeral=False,
     )
 
     mock_llm.prompt.assert_called_once_with(
         prompt_name="summarize_memory",
+        context=None,
         memory=all_memory,
     )
 
@@ -103,13 +104,14 @@ def test_fetch_some_memory(
         llm=mock_llm,
         vector_store=mock_store,
         triple_store=mock_store,
-        message=user_query,
+        context=user_query,
         id=id,
         ephemeral=False,
     )
 
     mock_llm.prompt.assert_called_once_with(
         prompt_name="summarize_memory",
+        context=user_query,
         memory=some_memory,
     )
 
@@ -121,7 +123,7 @@ def test_fetch_some_memory_ephemeral(mock_llm, data_graph):
         llm=mock_llm,
         vector_store=None,
         triple_store=None,
-        message=None,
+        context=None,
         id=None,
         ephemeral=True,
     )
