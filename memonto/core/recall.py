@@ -1,4 +1,3 @@
-import json
 from rdflib import Graph, URIRef, Literal, BNode
 
 from memonto.llms.base_llm import LLMModel
