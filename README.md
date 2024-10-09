@@ -1,7 +1,7 @@
 # memonto 🧠
 
 <p align="center">
-    <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner-v2.png" alt="logo"/>
+    <img src="https://memonto.s3.amazonaws.com/memonto-readme-banner-3.png" alt="logo"/>
 </p>
 
 <p align="center">
@@ -16,37 +16,14 @@
     </a>
 </p>
 
-`memonto` (_memory + ontology_) adds memory to AI agents based on your custom defined ontology. 
-- Define your own [RDF](https://www.w3.org/RDF/) ontology with [`rdflib`](https://github.com/RDFLib/rdflib).
-- `memonto` automatically extracts information that maps onto that ontology into a memory graph (triple store).
-- Memory data can be queried directly with `SPARQL` returning a list of matching triples (subject > predicate > object).
-- Memories can also be contextually summarized with the addition of a vector store.
+`memonto` (_memory + ontology_) augments AI agents with long-term memory through a knowledge graph. The knowledge graph enables agents to remember past interactions, understand relationships between data, and improve contextual awareness.
+- **Define** the ontology for the information you want memonto to retain.
+- **Extract** that information from any unstructured text to a knowledge graph.
+- **Query** your knowledge graph for intelligent summaries or raw data for RAG.
 
-```
-┌─────────────────────────────┐ ┌──────────────────────┐ ┌─────────────────────────────────┐
-│ Message                     │ │ LLM                  │ │ Memory Graph                    │
-│                             │ │                      │ │               ...               │
-│ {Otto von Bismarck was a    │ │                      │ │                │                │
-│  Prussian statesman and     │ │                      │ │┌───────────────▼───────────────┐│
-│  diplomat who oversaw the   │ │ [Otto von Bismarck]  │ ││ Otto von Bismarck             ││
-│  unification of Germany...} ┼─►                      │ │└────────┬──────┬───────────────┘│
-│                             │ │ is a [Person] who    │ │         │      │                │
-└─────────────────────────────┘ │                      ┼─►  livesAt│      │partOf          │
-┌─────────────────────────────┐ │ lives in a [Place]   │ │         │      │                │
-│ Ontology                    │ │                      │ │┌────────▼┐┌────▼───────────────┐│
-│                             ┼─► called [Prussia]     │ ││ Prussia ││ German Unification ││
-│       ┌─────────────┐       │ │                      │ │└─┬─────┬─┘└──────┬─────┬───────┘│
-│       │ Person      │       │ │ and participated in  │ │  │     │         │     │        │
-│       └───┬─────┬───┘       │ │                      │ │  ▼     ▼         ▼     ▼        │
-│           │     │           │ │ an [Event] called    │ │ ...   ...       ...   ...       │
-│    livesAt│     │partOf     │ │                      │ └─────────────────┬───────────────┘
-│           │     │           │ │ [German Unification] │                   │                
-│ ┌─────────▼─┐ ┌─▼─────────┐ │ │                      │ ┌─────────────────▼───────────────┐
-│ │ Place     │ │ Event     │ │ │                      │ │                                 │
-│ └───────────┘ └───────────┘ │ │                      │ │ SPARQL Queries / Memory Summary │
-│                             │ │                      │ │                                 │
-└─────────────────────────────┘ └──────────────────────┘ └─────────────────────────────────┘
-```
+<p align="center">
+    <img src="https://memonto.s3.amazonaws.com/memonto-explain-2.png" alt="explain"/>
+</p>
 
 ## 🚀 Install
 ```sh
@@ -56,12 +33,12 @@ pip install memonto
 ## ⚙️ Configure
 ### Ephemeral Mode
 
-Use `memonto` all in memory without any data stores.
+Use `memonto` without any data stores.
 
 > [!IMPORTANT]
-> When in `ephemeral` mode, there can be performance issues if the memory data grows too large. This mode is recommended for smaller use cases.
+> `ephemeral` mode is recommended for simpler/smaller use cases.
 
-**Define ontology**
+**Define RDF ontology**
 ```python
 from memonto import Memonto
 from rdflib import Graph, Namespace, RDF, RDFS
@@ -96,7 +73,10 @@ config = {
         },
     }
 }
+```
 
+**Enable Ephemeral Mode**
+```python
 memonto = Memonto(
     ontology=g,
     namespaces={"hist": HIST},
@@ -107,18 +87,7 @@ memonto.configure(config)
 
 ### Triple Store Mode
 
-A triple store enables the persistent storage of memory data. Currently supports Apache Jena Fuseki as a triple store. To configure a triple store, add `triple_store` to the top level of your `config` dictionary.
-
-**Install Apache Jena Fuseki**
-1. Download Apache Jena Fuseki [here](https://jena.apache.org/download/index.cgi#apache-jena-fuseki).
-2. Unzip to desired folder.
-```sh
-tar -xzf apache-jena-fuseki-X.Y.Z.tar.gz
-```
-3. Run a local server.
-```sh
-./fuseki-server --port=8080
-```
+Enable triple store for persistent storage. To configure a triple store, add `triple_store` to the top level of your `config` dictionary.
 
 **Configure Triple Store**
 ```python
@@ -132,9 +101,23 @@ config = {
 }
 ```
 
+**Install Apache Jena Fuseki**
+1. Download Apache Jena Fuseki [here](https://jena.apache.org/download/index.cgi#apache-jena-fuseki).
+2. Unzip to desired folder.
+```sh
+tar -xzf apache-jena-fuseki-X.Y.Z.tar.gz
+```
+3. Run a local server.
+```sh
+./fuseki-server --port=8080
+```
+
 ### Triple + Vector Stores Mode
 
-A vector store enables contextual retrieval of memory data, it must be used in conjunction with a triple store. Currently supports Chroma as a vector store. To configure a vector store, add `vector_store` to the top level of your `config` dictionary.
+Enable vector store for contextual retrieval. To configure a vector store, add `vector_store` to the top level of your `config` dictionary.
+
+> [!IMPORTANT]
+> You must enable triple store in conjunction with vector store.
 
 **Configure Local Vector Store**
 ```python
@@ -148,69 +131,18 @@ config = {
     },
 }
 ```
-**Configure Remote Vector Store**
-```python
-config = {
-    "vector_store": {
-        "provider": "chroma",
-        "config": {
-            "mode": "remote", 
-            "auth": "basic",
-            "host": "localhost",
-            "port": "8080"
-            "token": "bearer_token"
-        },
-    },
-}
-```
-```python
-config = {
-    "vector_store": {
-        "provider": "chroma",
-        "config": {
-            "mode": "remote", 
-            "auth": "token",
-            "host": "localhost",
-            "port": "8080"
-            "username": "admin"
-            "passport": "admin1"
-        },
-    },
-}
-```
 
 ## 🧰 Usage
-### RDF Namespaces
-
-`memonto` supports RDF namespaces as well. Just pass in a dictionary with the namespace's name along with its `rdflib.Namespace` object.
-```python
-memonto = Memonto(
-    ontology=g,
-    namespaces={"hist": HIST},
-)
-```
-
-### Memory ID
-
-For when you want to associate an ontology and memories to an unique `id`.
-```python
-memonto = Memonto(
-    id="some_id_123",
-    ontology=g,
-    namespaces={"hist": HIST},
-)
-```
-
 ### Retain
 
-Extract the relevant information from a message that maps onto your ontology. It will only extract data that matches onto an entity in your ontology.
+Exatract information from text that maps onto your ontology. It will only extract data that matches onto an entity in your ontology.
 ```python
 memonto.retain("Otto von Bismarck was a Prussian statesman and diplomat who oversaw the unification of Germany.")
 ```
 
 ### Recall
 
-Get a summary of the currently stored memories. You can provide a `context` for `memonto` to only summarize the memories that are relevant to that `context`. 
+Get a summary of the current memories. You can provide a `context` for `memonto` to only summarize the memories that are relevant to that `context`. 
 
 > [!IMPORTANT]
 > When in `ephemeral` mode, all memories will be returned even if a `context` is provided.
@@ -224,7 +156,7 @@ memonto.recall()
 
 ### Retrieve
 
-Get the raw memory data that can be programatically accessed. Instead of a summary, get the actual stored data as a `list[dict]` that can then be manipulated in code.
+Get raw knowledge graph data that can be programatically parsed or query for a summary that is relevant to a given context.
 > [!IMPORTANT]
 > When in `ephemeral` mode, raw queries are not supported.
 ```python
@@ -242,9 +174,19 @@ Forget about it.
 memonto.forget()
 ```
 
+### RDF Namespaces
+
+`memonto` supports RDF namespaces as well. Just pass in a dictionary with the namespace's name along with its `rdflib.Namespace` object.
+```python
+memonto = Memonto(
+    ontology=g,
+    namespaces={"hist": HIST},
+)
+```
+
 ### Auto Expand Ontology
 
-Enable `memonto` to automatically expand your ontology to cover new information. If `memonto` sees new information that **does not** fit onto your ontology, it will automatically add onto your ontology to cover that new information.
+Enable `memonto` to automatically expand your ontology to cover new data and relations. If `memonto` sees new information that **does not** fit onto your ontology, it will automatically add onto your ontology to cover that new information.
 ```python
 memonto = Memonto(
     id="some_id_123",
@@ -265,7 +207,7 @@ async def main():
     await memonto.aforget()
 ```
 
-## 🔮 Current and Upcoming
+## 🔮 Current and Upcoming Suport
 
 | LLM       |     | Vector Store |     |Triple Store |     |
 |-----------|-----|--------------|-----|-------------|-----|
