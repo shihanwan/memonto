@@ -207,7 +207,7 @@ async def main():
     await memonto.aforget()
 ```
 
-## 🔮 Current and Upcoming Suport
+## 🔮 Current and Upcoming Support
 
 | LLM       |     | Vector Store |     |Triple Store |     |
 |-----------|-----|--------------|-----|-------------|-----|
