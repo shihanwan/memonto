@@ -77,13 +77,14 @@ class Chroma(VectorStoreModel):
                 logger.error(f"Chroma Save\n{e}\n")
 
     def search(self, message: str, id: str = None, k: int = 3) -> list[dict]:
-        collection = self.client.get_collection(id or "default")
-
         try:
+            collection = self.client.get_collection(id or "default")
             matched = collection.query(
                 query_texts=[message],
                 n_results=k,
             )
+        except ValueError as e:
+            return []
         except Exception as e:
             logger.error(f"Chroma Search\n{e}\n")
 
