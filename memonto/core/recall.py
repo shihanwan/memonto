@@ -121,10 +121,10 @@ def _find_all(triple_store: TripleStoreModel, id: str) -> str:
 
     if isinstance(result, bytes):
         result = result.decode("utf-8")
-    
+
     if not result:
         return ""
-    
+
     return str(result)
 
 
