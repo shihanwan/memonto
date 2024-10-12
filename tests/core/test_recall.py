@@ -79,7 +79,7 @@ def test_fetch_all_memory(mock_find_all, mock_llm, mock_store, id, data_graph):
 
     mock_llm.prompt.assert_called_once_with(
         prompt_name="summarize_memory",
-        context=None,
+        context="",
         memory=all_memory,
     )
 
