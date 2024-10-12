@@ -113,11 +113,19 @@ def _find_adjacent_triples(
     return triple_store.query(query=query, format="turtle")
 
 
-def _find_all(triple_store: TripleStoreModel) -> str:
-    return triple_store.query(
-        query="CONSTRUCT {?s ?p ?o .} WHERE { GRAPH ?g { ?s ?p ?o . }}",
+def _find_all(triple_store: TripleStoreModel, id: str) -> str:
+    result = triple_store.query(
+        query=f"CONSTRUCT {{?s ?p ?o .}} WHERE {{ GRAPH <data-{id}> {{ ?s ?p ?o . }} }}",
         format="turtle",
     )
+
+    if isinstance(result, bytes):
+        result = result.decode("utf-8")
+
+    if not result:
+        return ""
+
+    return str(result)
 
 
 def _recall(
@@ -156,6 +164,7 @@ def _recall(
             memory = ""
     else:
         memory = _find_all(triple_store=triple_store, id=id)
+        context = ""
 
     logger.debug(f"Contextual Triples\n{memory}\n")
 
