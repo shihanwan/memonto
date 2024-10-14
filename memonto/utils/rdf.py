@@ -1,9 +1,12 @@
 import datetime
 import graphviz
 import os
-from rdflib import Graph
+import uuid
+from rdflib import Graph, Literal, Namespace, BNode
 from rdflib.namespace import RDF, RDFS, OWL
 from typing import Union
+
+from memonto.utils.namespaces import TRIPLE_PROP
 
 
 def is_rdf_schema(p) -> Graph:
@@ -16,6 +19,34 @@ def sanitize_label(label: str) -> str:
 
 def remove_namespace(c: str) -> str:
     return c.split("/")[-1].split("#")[-1].split(":")[-1]
+
+
+def serialize_graph(g: Graph, format: str = "turtle") -> Graph:
+    graph = Graph()
+
+    for s, p, o in g:
+        if isinstance(s, BNode) and (s, TRIPLE_PROP.uuid, None) in g:
+            continue
+
+        graph.add((s, p, o))
+
+    return graph.serialize(format=format)
+
+
+def hydrate_graph_with_ids(g: Graph) -> Graph:
+    for s, p, o in g:
+        print(s, p, o)
+        id = str(uuid.uuid4())
+
+        triple_node = BNode()
+
+        g.add((triple_node, RDF.subject, s))
+        g.add((triple_node, RDF.predicate, p))
+        g.add((triple_node, RDF.object, o))
+
+        g.add((triple_node, TRIPLE_PROP.uuid, Literal(id)))
+
+    return g
 
 
 def generate_image(g: Graph, path: str = None) -> None:
