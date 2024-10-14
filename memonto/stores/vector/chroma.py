@@ -2,12 +2,13 @@ import chromadb
 import json
 from chromadb.config import Settings
 from pydantic import model_validator
-from rdflib import Graph
+from rdflib import Graph, RDF, BNode
 from typing import Literal
 
 from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
 from memonto.utils.rdf import is_rdf_schema, remove_namespace
+from memonto.utils.namespaces import TRIPLE_PROP
 
 
 class Chroma(VectorStoreModel):
@@ -59,16 +60,23 @@ class Chroma(VectorStoreModel):
         for s, p, o in g:
             if is_rdf_schema(p):
                 continue
+            if isinstance(s, BNode) and (s, TRIPLE_PROP.uuid, None) in g:
+                continue
 
             _s = remove_namespace(str(s))
             _p = remove_namespace(str(p))
             _o = remove_namespace(str(o))
 
+            id = ""
+            for bnode in g.subjects(RDF.subject, s):
+                if (bnode, RDF.predicate, p) in g and (bnode, RDF.object, o) in g:
+                    id = g.value(bnode, TRIPLE_PROP.uuid)
+
             documents.append(f"{_s} {_p} {_o}")
             metadatas.append(
                 {"triple": json.dumps({"s": str(s), "p": str(p), "o": str(o)})}
             )
-            ids.append(f"{s}-{p}-{o}")
+            ids.append(f"{id}")
 
         if documents:
             try:
@@ -88,7 +96,7 @@ class Chroma(VectorStoreModel):
         except Exception as e:
             logger.error(f"Chroma Search\n{e}\n")
 
-        return [json.loads(t.get("triple", "{}")) for t in matched["metadatas"][0]]
+        return matched.get("ids", [])[0]
 
     def delete(self, id: str) -> None:
         try:

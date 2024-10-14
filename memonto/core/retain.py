@@ -6,7 +6,7 @@ from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
-from memonto.utils.rdf import _render
+from memonto.utils.rdf import _render, hydrate_graph_with_ids
 
 
 def _run_script(
@@ -160,13 +160,15 @@ def save_memory(
     logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
     if not ephemeral:
+        hydrate_graph_with_ids(data)
+
         triple_store.save(ontology=ontology, data=data, id=id)
+
         if vector_store:
             vector_store.save(g=data, id=id)
 
         # debug
-        _render(g=data, format="image")
-
+        # _render(g=data, format="image")
         data.remove((None, None, None))
 
 

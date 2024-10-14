@@ -1,9 +1,13 @@
 import datetime
 import graphviz
 import os
-from rdflib import Graph
+import uuid
+from collections import defaultdict
+from rdflib import Graph, Literal, BNode
 from rdflib.namespace import RDF, RDFS, OWL
 from typing import Union
+
+from memonto.utils.namespaces import TRIPLE_PROP
 
 
 def is_rdf_schema(p) -> Graph:
@@ -18,6 +22,33 @@ def remove_namespace(c: str) -> str:
     return c.split("/")[-1].split("#")[-1].split(":")[-1]
 
 
+def serialize_graph_without_ids(g: Graph, format: str = "turtle") -> Graph:
+    graph = Graph()
+
+    for s, p, o in g:
+        if isinstance(s, BNode) and (s, TRIPLE_PROP.uuid, None) in g:
+            continue
+
+        graph.add((s, p, o))
+
+    return graph.serialize(format=format)
+
+
+def hydrate_graph_with_ids(g: Graph) -> Graph:
+    for s, p, o in g:
+        id = str(uuid.uuid4())
+
+        triple_node = BNode()
+
+        g.add((triple_node, RDF.subject, s))
+        g.add((triple_node, RDF.predicate, p))
+        g.add((triple_node, RDF.object, o))
+
+        g.add((triple_node, TRIPLE_PROP.uuid, Literal(id)))
+
+    return g
+
+
 def generate_image(g: Graph, path: str = None) -> None:
     if not path:
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -27,13 +58,17 @@ def generate_image(g: Graph, path: str = None) -> None:
 
     dot = graphviz.Digraph()
 
+    bnode_labels = defaultdict(lambda: f"BNode{len(bnode_labels) + 1}")
+
     for s, p, o in g:
-        if is_rdf_schema(p):
+        if isinstance(s, BNode) and (s, TRIPLE_PROP.uuid, None) in g:
+            continue
+        if isinstance(o, BNode) and (o, TRIPLE_PROP.uuid, None) in g:
             continue
 
-        s_label = sanitize_label(str(s))
+        s_label = bnode_labels[s] if isinstance(s, BNode) else sanitize_label(str(s))
+        o_label = bnode_labels[o] if isinstance(o, BNode) else sanitize_label(str(o))
         p_label = sanitize_label(str(p))
-        o_label = sanitize_label(str(o))
 
         dot.node(s_label, s_label)
         dot.node(o_label, o_label)
@@ -78,11 +113,11 @@ def _render(
         - "image" format returns a string with the path to the png image.
     """
     if format == "turtle":
-        return g.serialize(format="turtle")
+        return serialize_graph_without_ids(g=g, format="turtle")
     elif format == "json":
-        return g.serialize(format="json-ld")
+        return serialize_graph_without_ids(g=g, format="json-ld")
     elif format == "triples":
-        return g.serialize(format="nt")
+        return serialize_graph_without_ids(g=g, format="nt")
     elif format == "text":
         return generate_text(g)
     elif format == "image":
