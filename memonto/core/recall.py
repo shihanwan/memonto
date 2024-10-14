@@ -13,7 +13,7 @@ def _hydrate_triples(
     triple_store: VectorStoreModel,
     id: str = None,
 ) -> Graph:
-    triple_ids = " ".join(f"(\"{triple_id}\")" for triple_id in triples)
+    triple_ids = " ".join(f'("{triple_id}")' for triple_id in triples)
 
     graph_id = f"data-{id}" if id else "data"
 
