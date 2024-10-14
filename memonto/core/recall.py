@@ -4,6 +4,8 @@ from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
+from memonto.utils.namespaces import TRIPLE_PROP
+from memonto.utils.rdf import serialize_graph_without_ids
 
 
 def _hydrate_triples(
@@ -11,21 +13,23 @@ def _hydrate_triples(
     triple_store: VectorStoreModel,
     id: str = None,
 ) -> Graph:
-    triple_values = " ".join(
-        f"(<{triple['s']}> <{triple['p']}> \"{triple['o']}\")" for triple in triples
-    )
+    triple_ids = " ".join(f"(\"{triple_id}\")" for triple_id in triples)
 
     graph_id = f"data-{id}" if id else "data"
 
     query = f"""
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
     CONSTRUCT {{
         ?s ?p ?o .
     }}
     WHERE {{
         GRAPH <{graph_id}> {{
-            VALUES (?s ?p ?o_string) {{ {triple_values} }}
-            ?s ?p ?o .
-            FILTER (STR(?s) = STR(?s) && STR(?p) = STR(?p) && STR(?o) = ?o_string)
+            VALUES (?uuid) {{ {triple_ids} }}
+            ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
+            ?triple_node rdf:subject ?s ;
+                         rdf:predicate ?p ;
+                         rdf:object ?o .
         }}
     }}
     """
@@ -121,7 +125,16 @@ def _find_adjacent_triples(
 
 def _find_all(triple_store: TripleStoreModel, id: str) -> str:
     result = triple_store.query(
-        query=f"CONSTRUCT {{?s ?p ?o .}} WHERE {{ GRAPH <data-{id}> {{ ?s ?p ?o . }} }}",
+        query=f"""
+        CONSTRUCT {{
+            ?s ?p ?o .
+        }} WHERE {{
+            GRAPH <data-{id}> {{
+                ?s ?p ?o .
+                FILTER NOT EXISTS {{ ?s <{TRIPLE_PROP.uuid}> ?uuid }}
+            }}
+        }}
+        """,
         format="turtle",
     )
 
@@ -145,7 +158,7 @@ def get_contextual_memory(
     memory = ""
 
     if ephemeral:
-        memory = data.serialize(format="turtle")
+        memory = serialize_graph_without_ids(data)
     elif context:
         try:
             matched_triples = vector_store.search(message=context, id=id)

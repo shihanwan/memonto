@@ -2,7 +2,7 @@ import pytest
 from rdflib import Graph, URIRef, Literal, BNode
 
 from memonto.utils.namespaces import TRIPLE_PROP
-from memonto.utils.rdf import serialize_graph, hydrate_graph_with_ids
+from memonto.utils.rdf import serialize_graph_without_ids, hydrate_graph_with_ids
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def bnode_graph():
 
 
 def test_serialize_graph(bnode_graph):
-    g = serialize_graph(bnode_graph)
+    g = serialize_graph_without_ids(bnode_graph)
 
     assert "12345" not in g
     assert "s" in g
