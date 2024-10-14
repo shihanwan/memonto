@@ -95,8 +95,6 @@ class Chroma(VectorStoreModel):
         except Exception as e:
             logger.error(f"Chroma Search\n{e}\n")
 
-        print(matched)
-
         return matched.get("ids", [])[0]
 
     def delete(self, id: str) -> None:
