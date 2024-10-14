@@ -84,7 +84,7 @@ class Chroma(VectorStoreModel):
             except Exception as e:
                 logger.error(f"Chroma Save\n{e}\n")
 
-    def search(self, message: str, id: str = None, k: int = 3) -> list[dict]:
+    def search(self, message: str, id: str = None, k: int = 3) -> dict[str, dict]:
         try:
             collection = self.client.get_collection(id or "default")
             matched = collection.query(
@@ -92,11 +92,44 @@ class Chroma(VectorStoreModel):
                 n_results=k,
             )
         except ValueError as e:
-            return []
+            return {}
         except Exception as e:
             logger.error(f"Chroma Search\n{e}\n")
 
-        return matched.get("ids", [])[0]
+        ids = matched.get("ids", [[]])[0]
+        meta = matched.get("metadatas", [[]])[0]
+
+        return {id: meta[i] if i < len(meta) else None for i, id in enumerate(ids)}
+
+    def update(self, id: str, updates: dict) -> None:
+        try:
+            collection = self.client.get_collection(id or "default")
+            collection.delete(ids=list(updates.keys()))
+
+            documents = []
+            metadatas = []
+            ids = []
+
+            for id, u in updates.items():
+                u = json.loads(u["triple"])
+                print(u)
+                print(u["s"])
+                print(u["p"])
+                print(u["o"])
+
+                _s = remove_namespace(u["s"])
+                _p = remove_namespace(u["p"])
+                _o = remove_namespace(u["o"])
+
+                documents.append(f"{_s} {_p} {_o}")
+                metadatas.append(
+                    {"triple": json.dumps({"s": u["s"], "p": u["p"], "o": u["o"]})}
+                )   
+                ids.append(f"{id}")
+
+            collection.add(documents=documents, metadatas=metadatas, ids=ids)
+        except Exception as e:
+            logger.error(f"Chroma Update\n{e}\n")
 
     def delete(self, id: str) -> None:
         try:
