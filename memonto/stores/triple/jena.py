@@ -169,6 +169,59 @@ class ApacheJena(TripleStoreModel):
             query=query,
         )
 
+    def update(
+        self,
+        del_triples: list[dict],
+        add_triples: list[dict],
+        id: str = None,
+    ) -> None:
+        print(del_triples)
+        print(add_triples)
+
+        remove_conditions = []
+
+        for t in del_triples.values():
+            remove_conditions.append(f"""
+            (
+                str(?s) = "{t['s']}" &&
+                str(?p) = "{t['p']}" &&
+                str(?o) = "{t['o']}"
+            )
+            """)
+
+        remove_query = " || ".join(remove_conditions)
+        
+        # TODO: how to insert with correct types?
+        for t in add_triples.values():
+            print(t)
+
+        query = f"""
+        DELETE {{
+            GRAPH <data-{id}> {{
+                ?s ?p ?o .
+            }}
+        }} 
+        INSERT {{
+            ?person ex:isMinor true .
+        }}
+        WHERE {{
+            GRAPH <data-{id}> {{
+                ?s ?p ?o .
+                FILTER (
+                    str(?s) = "" &&
+                    str(?p) = "" &&
+                    str(?o) = ""
+                )
+            }}
+        }}
+        """
+
+        self._query(
+            url=f"{self.connection_url}/update",
+            method=POST,
+            query=query,
+        )
+
     def query(self, query: str, method: str = GET, format: str = JSON) -> list:
         result = self._query(
             url=f"{self.connection_url}/sparql",

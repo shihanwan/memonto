@@ -1,5 +1,7 @@
+import ast
 from rdflib import Graph, Namespace
 
+from memonto.core.recall import _hydrate_triples
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
@@ -7,7 +9,7 @@ from memonto.utils.logger import logger
 from memonto.utils.rdf import _render
 
 
-def run_script(
+def _run_script(
     script: str,
     exec_ctx: dict,
     message: str,
@@ -66,37 +68,87 @@ def expand_ontology(
     return ontology
 
 
-def _retain(
-    ontology: Graph,
-    namespaces: dict[str, Namespace],
-    data: Graph,
+def update_memory(
     llm: LLMModel,
     triple_store: TripleStoreModel,
     vector_store: VectorStoreModel,
-    message: str,
+    str_ontology: str,
+    message: str, 
     id: str,
-    auto_expand: bool,
-    ephemeral: bool,
+) -> str:
+    potential_updates = vector_store.search(message=message, id=id, k=3)
+    logger.debug(f"update_memory pre\n{potential_updates}\n")
+
+    if not potential_updates:
+        return ""
+    
+    # matched_graph = _hydrate_triples(
+    #     triples=matched_triples,
+    #     triple_store=triple_store,
+    #     id=id,
+    # )
+    # matched_triples = matched_graph.serialize(format="turtle")
+    # print(matched_triples)
+
+    updates = llm.prompt(
+        prompt_name="update_memory",
+        temperature=0.2,
+        ontology=str_ontology,
+        user_message=message,
+        existing_memory=str(potential_updates),
+    )
+
+    updated_memory = ast.literal_eval(updates)
+    logger.debug(f"update_memory post\n{updated_memory}\n")
+    
+    # TODO: save to triple store
+
+    pre_set = {(item['s'], item['p'], item['o']): item for item in potential_updates}
+    post_set = {(item['s'], item['p'], item['o']): item for item in updated_memory}
+
+    removed_triples = {key: pre_set[key] for key in pre_set if key not in post_set}
+    added_triples = {key: post_set[key] for key in post_set if key not in pre_set}
+
+    # TODO: raise error if removed doesnt match added
+
+    if removed_triples and added_triples:
+        try:
+            triple_store.update(
+                del_triples=removed_triples,
+                add_triples=added_triples,
+                id=id,
+            )
+        except Exception as e:
+            pass
+        
+    # TODO: return nothing if nothing changed
+    return str(updated_memory)
+
+
+def save_memory(
+    ontology: Graph,
+    namespaces: dict[str, Namespace],
+    data: Graph,
+    llm: LLMModel, 
+    triple_store: TripleStoreModel, 
+    vector_store: VectorStoreModel, 
+    message: str,
+    id: str, 
+    ephemeral: bool, 
+    str_ontology: str, 
+    updated_memory: str
 ) -> None:
-    if auto_expand:
-        ontology = expand_ontology(
-            ontology=ontology,
-            llm=llm,
-            message=message,
-        )
-
-    str_ontology = ontology.serialize(format="turtle")
-
     script = llm.prompt(
         prompt_name="commit_to_memory",
         temperature=0.2,
         ontology=str_ontology,
         user_message=message,
+        updated_memory=updated_memory,
     )
 
     logger.debug(f"Retain Script\n{script}\n")
 
-    data = run_script(
+    data = _run_script(
         script=script,
         exec_ctx={"data": data} | namespaces,
         message=message,
@@ -112,5 +164,53 @@ def _retain(
         if vector_store:
             vector_store.save(g=data, id=id)
 
-        # _render(g=data, format="image")
+        # debug
+        _render(g=data, format="image")
+
         data.remove((None, None, None))
+
+
+def _retain(
+    ontology: Graph,
+    namespaces: dict[str, Namespace],
+    data: Graph,
+    llm: LLMModel,
+    triple_store: TripleStoreModel,
+    vector_store: VectorStoreModel,
+    message: str,
+    id: str,
+    auto_expand: bool,
+    ephemeral: bool,
+) -> None:
+    str_ontology = ontology.serialize(format="turtle")
+
+    if auto_expand:
+        ontology = expand_ontology(
+            ontology=ontology,
+            llm=llm,
+            message=message,
+        )
+
+    # TODO: this should work with ephemeral as well but needs to be adjusted slightly
+    updated_memory = update_memory(
+        llm=llm,
+        vector_store=vector_store,
+        triple_store=triple_store,
+        str_ontology=str_ontology,
+        message=message, 
+        id=id
+    )
+
+    save_memory(
+        ontology=ontology,
+        namespaces=namespaces,
+        data=data,
+        llm=llm, 
+        triple_store=triple_store, 
+        vector_store=vector_store, 
+        message=message, 
+        id=id, 
+        ephemeral=ephemeral, 
+        str_ontology=str_ontology, 
+        updated_memory=updated_memory
+    )
