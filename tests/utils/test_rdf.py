@@ -9,16 +9,20 @@ from memonto.utils.rdf import serialize_graph, hydrate_graph_with_ids
 def graph():
     g = Graph()
 
-    g.add((
-        URIRef("http://example.org/s1"),
-        URIRef("http://example.org/p1"),
-        URIRef("http://example.org/o1"),
-    ))
-    g.add((
-        URIRef("http://example.org/s2"),
-        URIRef("http://example.org/p2"),
-        URIRef("http://example.org/o2"),
-    ))
+    g.add(
+        (
+            URIRef("http://example.org/s1"),
+            URIRef("http://example.org/p1"),
+            URIRef("http://example.org/o1"),
+        )
+    )
+    g.add(
+        (
+            URIRef("http://example.org/s2"),
+            URIRef("http://example.org/p2"),
+            URIRef("http://example.org/o2"),
+        )
+    )
 
     return g
 
@@ -27,11 +31,13 @@ def graph():
 def bnode_graph():
     g = Graph()
 
-    g.add((
-        URIRef("http://example.org/s"), 
-        URIRef("http://example.org/p"), 
-        URIRef("http://example.org/o")
-    ))
+    g.add(
+        (
+            URIRef("http://example.org/s"),
+            URIRef("http://example.org/p"),
+            URIRef("http://example.org/o"),
+        )
+    )
     g.add((BNode(), TRIPLE_PROP.uuid, Literal("12345")))
 
     return g
