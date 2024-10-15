@@ -101,35 +101,12 @@ class Chroma(VectorStoreModel):
 
         return {id: meta[i] if i < len(meta) else None for i, id in enumerate(ids)}
 
-    def update(self, id: str, updates: dict) -> None:
+    def delete_by_ids(self, graph_id: str, ids: list[str]) -> None:
         try:
-            collection = self.client.get_collection(id or "default")
-            collection.delete(ids=list(updates.keys()))
-
-            documents = []
-            metadatas = []
-            ids = []
-
-            for id, u in updates.items():
-                u = json.loads(u["triple"])
-                print(u)
-                print(u["s"])
-                print(u["p"])
-                print(u["o"])
-
-                _s = remove_namespace(u["s"])
-                _p = remove_namespace(u["p"])
-                _o = remove_namespace(u["o"])
-
-                documents.append(f"{_s} {_p} {_o}")
-                metadatas.append(
-                    {"triple": json.dumps({"s": u["s"], "p": u["p"], "o": u["o"]})}
-                )   
-                ids.append(f"{id}")
-
-            collection.add(documents=documents, metadatas=metadatas, ids=ids)
+            collection = self.client.get_collection(graph_id or "default")
+            collection.delete(ids=list(ids))
         except Exception as e:
-            logger.error(f"Chroma Update\n{e}\n")
+            logger.error(f"Chroma Delete by IDs\n{e}\n")
 
     def delete(self, id: str) -> None:
         try:

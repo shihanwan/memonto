@@ -1,5 +1,6 @@
 import ast
-from rdflib import Graph, Namespace
+import json
+from rdflib import Graph, Namespace, URIRef
 
 from memonto.core.recall import _hydrate_triples
 from memonto.llms.base_llm import LLMModel
@@ -46,6 +47,14 @@ def _run_script(
     return data
 
 
+def _find_updated_triples(original: dict, updated: dict) -> dict[str, dict]:
+    return {
+        id: updated[id] 
+        for id in original 
+        if id in updated and original[id]["triple"] != updated[id]["triple"]
+    }
+
+
 def expand_ontology(
     ontology: Graph,
     llm: LLMModel,
@@ -69,6 +78,7 @@ def expand_ontology(
 
 
 def update_memory(
+    data: Graph,
     llm: LLMModel,
     triple_store: TripleStoreModel,
     vector_store: VectorStoreModel,
@@ -76,52 +86,35 @@ def update_memory(
     message: str, 
     id: str,
 ) -> str:
-    potential_updates = vector_store.search(message=message, id=id, k=3)
-    logger.debug(f"update_memory pre\n{potential_updates}\n")
+    matched = vector_store.search(message=message, id=id, k=3)
+    logger.debug(f"update_memory pre\n{matched}\n")
 
-    if not potential_updates:
+    if not matched:
         return ""
-    
-    # matched_graph = _hydrate_triples(
-    #     triples=matched_triples,
-    #     triple_store=triple_store,
-    #     id=id,
-    # )
-    # matched_triples = matched_graph.serialize(format="turtle")
-    # print(matched_triples)
 
     updates = llm.prompt(
         prompt_name="update_memory",
         temperature=0.2,
         ontology=str_ontology,
         user_message=message,
-        existing_memory=str(potential_updates),
+        existing_memory=str(matched),
     )
 
-    updated_memory = ast.literal_eval(updates)
-    logger.debug(f"update_memory post\n{updated_memory}\n")
+    updates = ast.literal_eval(updates)
+    logger.debug(f"update_memory post\n{updates}\n")
     
-    # TODO: save to triple store
+    updated_memory = _find_updated_triples(original=matched, updated=updates)
 
-    pre_set = {(item['s'], item['p'], item['o']): item for item in potential_updates}
-    post_set = {(item['s'], item['p'], item['o']): item for item in updated_memory}
-
-    removed_triples = {key: pre_set[key] for key in pre_set if key not in post_set}
-    added_triples = {key: post_set[key] for key in post_set if key not in pre_set}
-
+    print(updated_memory)
     # TODO: raise error if removed doesnt match added
+    if not updated_memory:
+        return ""
+    
+    # TODO: update vector store
+    vector_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
+    # TODO: update triple store
+    triple_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
 
-    if removed_triples and added_triples:
-        try:
-            triple_store.update(
-                del_triples=removed_triples,
-                add_triples=added_triples,
-                id=id,
-            )
-        except Exception as e:
-            pass
-        
-    # TODO: return nothing if nothing changed
     return str(updated_memory)
 
 
@@ -168,7 +161,7 @@ def save_memory(
             vector_store.save(g=data, id=id)
 
         # debug
-        # _render(g=data, format="image")
+        _render(g=data, format="image")
         data.remove((None, None, None))
 
 
@@ -195,6 +188,7 @@ def _retain(
 
     # TODO: this should work with ephemeral as well but needs to be adjusted slightly
     updated_memory = update_memory(
+        data=data,
         llm=llm,
         vector_store=vector_store,
         triple_store=triple_store,

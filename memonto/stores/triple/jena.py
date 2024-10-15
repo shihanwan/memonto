@@ -1,3 +1,4 @@
+import json
 from rdflib import Graph, Literal, Namespace, URIRef
 from SPARQLWrapper import SPARQLWrapper, GET, POST, TURTLE, JSON
 from SPARQLWrapper.SPARQLExceptions import SPARQLWrapperException
@@ -5,6 +6,7 @@ from typing import Tuple
 
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.utils.logger import logger
+from memonto.utils.namespaces import TRIPLE_PROP
 
 
 class ApacheJena(TripleStoreModel):
@@ -160,6 +162,39 @@ class ApacheJena(TripleStoreModel):
 
         return result["results"]["bindings"]
 
+    def get_by_ids(self, ids: list[str], graph_id: str = None) -> Graph:
+        graph_id = f"data-{graph_id}" if graph_id else "data"
+        triple_ids = " ".join(f'("{id}")' for id in ids)
+
+        query = f"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+        CONSTRUCT {{
+            ?s ?p ?o .
+        }}
+        WHERE {{
+            GRAPH <{graph_id}> {{
+                VALUES (?uuid) {{ {triple_ids} }}
+                ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
+                ?triple_node rdf:subject ?s ;
+                            rdf:predicate ?p ;
+                            rdf:object ?o .
+            }}
+        }}
+        """
+
+        result = self._query(
+            url=f"{self.connection_url}/sparql",
+            method=GET,
+            query=query,
+            format=TURTLE,
+        )
+
+        g = Graph()
+        g.parse(data=result, format="turtle")
+
+        return g
+    
     def delete(self, id: str = None) -> None:
         query = f"""DROP GRAPH <ontology-{id}> ; DROP GRAPH <data-{id}> ;"""
 
@@ -169,49 +204,30 @@ class ApacheJena(TripleStoreModel):
             query=query,
         )
 
-    def update(
-        self,
-        del_triples: list[dict],
-        add_triples: list[dict],
-        id: str = None,
-    ) -> None:
-        print(del_triples)
-        print(add_triples)
-
-        remove_conditions = []
-
-        for t in del_triples.values():
-            remove_conditions.append(f"""
-            (
-                str(?s) = "{t['s']}" &&
-                str(?p) = "{t['p']}" &&
-                str(?o) = "{t['o']}"
-            )
-            """)
-
-        remove_query = " || ".join(remove_conditions)
-        
-        # TODO: how to insert with correct types?
-        for t in add_triples.values():
-            print(t)
+    def delete_by_ids(self, ids: list[str], graph_id: str = None) -> None:
+        g_id = f"data-{graph_id}" if graph_id else "data"
+        t_ids = " ".join(f'"{id}"' for id in ids)
 
         query = f"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
         DELETE {{
-            GRAPH <data-{id}> {{
+            GRAPH <{g_id}> {{
+                ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
+                ?triple_node rdf:subject ?s ;
+                            rdf:predicate ?p ;
+                            rdf:object ?o .
                 ?s ?p ?o .
             }}
-        }} 
-        INSERT {{
-            ?person ex:isMinor true .
         }}
         WHERE {{
-            GRAPH <data-{id}> {{
+            VALUES ?uuid {{ {t_ids} }}
+            GRAPH <{g_id}> {{
+                ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
+                ?triple_node rdf:subject ?s ;
+                            rdf:predicate ?p ;
+                            rdf:object ?o .
                 ?s ?p ?o .
-                FILTER (
-                    str(?s) = "" &&
-                    str(?p) = "" &&
-                    str(?o) = ""
-                )
             }}
         }}
         """
