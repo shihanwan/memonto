@@ -207,7 +207,7 @@ def _retain(
 ) -> None:
     str_ontology = ontology.serialize(format="turtle")
     updated_memory = ""
-    
+
     if auto_expand:
         ontology = expand_ontology(
             ontology=ontology,
