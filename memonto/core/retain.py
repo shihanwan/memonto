@@ -1,6 +1,4 @@
 import ast
-import json
-import uuid
 from rdflib import Graph, Namespace
 
 from memonto.llms.base_llm import LLMModel
@@ -13,6 +11,7 @@ from memonto.utils.rdf import (
     find_updated_triples_ephemeral,
     hydrate_graph_with_ids,
 )
+
 
 def _run_script(
     script: str,
@@ -87,12 +86,14 @@ def update_memory(
         data_list = []
 
         for s, p, o in data:
-            data_list.append({
-                "s": str(s),
-                "p": str(p),
-                "o": str(o),
-            })
-        
+            data_list.append(
+                {
+                    "s": str(s),
+                    "p": str(p),
+                    "o": str(o),
+                }
+            )
+
         logger.debug(f"existing memories\n{data_list}\n")
 
         updates = llm.prompt(
@@ -112,7 +113,7 @@ def update_memory(
             for t in updated_memory:
                 if str(s) == t["s"] and str(p) == t["p"] and str(o) == t["o"]:
                     data.remove((s, p, o))
-            
+
         return str(updated_memory)
     else:
         matched = vector_store.search(message=message, id=id, k=3)
@@ -180,7 +181,7 @@ def save_memory(
 
     # debug
     # _render(g=data, format="image")
-    
+
     if not ephemeral:
         hydrate_graph_with_ids(data)
         triple_store.save(ontology=ontology, data=data, id=id)

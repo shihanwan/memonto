@@ -66,7 +66,7 @@ def find_updated_triples_ephemeral(o: list[dict], n: list[dict]) -> list[dict]:
 
             if ns == os and np == op and no == oo:
                 return False
-        
+
         return True
 
     return [nt for nt in n if is_updated(nt, o)]

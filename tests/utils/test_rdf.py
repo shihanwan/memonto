@@ -73,7 +73,7 @@ def test_find_updated_triples_ephemeral():
         {"s": "9", "p": "2", "o": "1"},
         {"s": "5", "p": "7", "o": "9"},
     ]
-    
+
     assert find_updated_triples_ephemeral(original, updated) == [
         {"s": "1", "p": "2", "o": "9"},
         {"s": "9", "p": "2", "o": "1"},
@@ -91,5 +91,5 @@ def test_find_updated_triples_ephemeral_no_updates():
         {"s": "3", "p": "2", "o": "1"},
         {"s": "5", "p": "7", "o": "9"},
     ]
-    
+
     assert find_updated_triples_ephemeral(original, updated) == []
