@@ -101,15 +101,15 @@ class Chroma(VectorStoreModel):
 
         return {id: meta[i] if i < len(meta) else None for i, id in enumerate(ids)}
 
+    def delete(self, id: str) -> None:
+        try:
+            self.client.delete_collection(id)
+        except Exception as e:
+            logger.error(f"Chroma Delete\n{e}\n")
+
     def delete_by_ids(self, graph_id: str, ids: list[str]) -> None:
         try:
             collection = self.client.get_collection(graph_id or "default")
             collection.delete(ids=list(ids))
         except Exception as e:
             logger.error(f"Chroma Delete by IDs\n{e}\n")
-
-    def delete(self, id: str) -> None:
-        try:
-            self.client.delete_collection(id)
-        except Exception as e:
-            logger.error(f"Chroma Delete\n{e}\n")

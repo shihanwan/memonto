@@ -49,6 +49,29 @@ def hydrate_graph_with_ids(g: Graph) -> Graph:
     return g
 
 
+def find_updated_triples(original: dict, updated: dict) -> dict[str, dict]:
+    return {
+        id: updated[id]
+        for id in original
+        if id in updated and original[id]["triple"] != updated[id]["triple"]
+    }
+
+
+def find_updated_triples_ephemeral(o: list[dict], n: list[dict]) -> list[dict]:
+    def is_updated(nt: dict, o: list[dict]) -> bool:
+        ns, np, no = str(nt["s"]), str(nt["p"]), str(nt["o"])
+
+        for ot in o:
+            os, op, oo = str(ot["s"]), str(ot["p"]), str(ot["o"])
+
+            if ns == os and np == op and no == oo:
+                return False
+        
+        return True
+
+    return [nt for nt in n if is_updated(nt, o)]
+
+
 def generate_image(g: Graph, path: str = None) -> None:
     if not path:
         current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")

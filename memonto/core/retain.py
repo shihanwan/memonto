@@ -1,14 +1,18 @@
 import ast
 import json
-from rdflib import Graph, Namespace, URIRef
+import uuid
+from rdflib import Graph, Namespace
 
-from memonto.core.recall import _hydrate_triples
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
-from memonto.utils.rdf import _render, hydrate_graph_with_ids
-
+from memonto.utils.rdf import (
+    _render,
+    find_updated_triples,
+    find_updated_triples_ephemeral,
+    hydrate_graph_with_ids,
+)
 
 def _run_script(
     script: str,
@@ -47,14 +51,6 @@ def _run_script(
     return data
 
 
-def _find_updated_triples(original: dict, updated: dict) -> dict[str, dict]:
-    return {
-        id: updated[id] 
-        for id in original 
-        if id in updated and original[id]["triple"] != updated[id]["triple"]
-    }
-
-
 def expand_ontology(
     ontology: Graph,
     llm: LLMModel,
@@ -83,53 +79,83 @@ def update_memory(
     triple_store: TripleStoreModel,
     vector_store: VectorStoreModel,
     str_ontology: str,
-    message: str, 
+    message: str,
     id: str,
+    ephemeral: bool,
 ) -> str:
-    matched = vector_store.search(message=message, id=id, k=3)
-    logger.debug(f"update_memory pre\n{matched}\n")
+    if ephemeral:
+        data_list = []
 
-    if not matched:
-        return ""
+        for s, p, o in data:
+            data_list.append({
+                "s": str(s),
+                "p": str(p),
+                "o": str(o),
+            })
+        
+        logger.debug(f"existing memories\n{data_list}\n")
 
-    updates = llm.prompt(
-        prompt_name="update_memory",
-        temperature=0.2,
-        ontology=str_ontology,
-        user_message=message,
-        existing_memory=str(matched),
-    )
+        updates = llm.prompt(
+            prompt_name="update_memory",
+            temperature=0.2,
+            ontology=str_ontology,
+            user_message=message,
+            existing_memory=str(data_list),
+        )
+        logger.debug(f"updated memories\n{updates}\n")
 
-    updates = ast.literal_eval(updates)
-    logger.debug(f"update_memory post\n{updates}\n")
-    
-    updated_memory = _find_updated_triples(original=matched, updated=updates)
+        updates = ast.literal_eval(updates)
+        updated_memory = find_updated_triples_ephemeral(updates, data_list)
+        logger.debug(f"memories diff\n{updated_memory}\n")
 
-    print(updated_memory)
-    # TODO: raise error if removed doesnt match added
-    if not updated_memory:
-        return ""
-    
-    # TODO: update vector store
-    vector_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
-    # TODO: update triple store
-    triple_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
+        for s, p, o in data:
+            for t in updated_memory:
+                if str(s) == t["s"] and str(p) == t["p"] and str(o) == t["o"]:
+                    data.remove((s, p, o))
+            
+        return str(updated_memory)
+    else:
+        matched = vector_store.search(message=message, id=id, k=3)
+        logger.debug(f"existing memories\n{matched}\n")
 
-    return str(updated_memory)
+        if not matched:
+            return ""
+
+        updates = llm.prompt(
+            prompt_name="update_memory",
+            temperature=0.2,
+            ontology=str_ontology,
+            user_message=message,
+            existing_memory=str(matched),
+        )
+
+        updates = ast.literal_eval(updates)
+        logger.debug(f"updated memories\n{updates}\n")
+
+        updated_memory = find_updated_triples(original=matched, updated=updates)
+        logger.debug(f"memories diff\n{updated_memory}\n")
+
+        if not updated_memory:
+            return ""
+
+        vector_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
+        triple_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
+
+        return str(updated_memory)
 
 
 def save_memory(
     ontology: Graph,
     namespaces: dict[str, Namespace],
     data: Graph,
-    llm: LLMModel, 
-    triple_store: TripleStoreModel, 
-    vector_store: VectorStoreModel, 
+    llm: LLMModel,
+    triple_store: TripleStoreModel,
+    vector_store: VectorStoreModel,
     message: str,
-    id: str, 
-    ephemeral: bool, 
-    str_ontology: str, 
-    updated_memory: str
+    id: str,
+    ephemeral: bool,
+    str_ontology: str,
+    updated_memory: str,
 ) -> None:
     script = llm.prompt(
         prompt_name="commit_to_memory",
@@ -152,16 +178,16 @@ def save_memory(
 
     logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
+    # debug
+    # _render(g=data, format="image")
+    
     if not ephemeral:
         hydrate_graph_with_ids(data)
-
         triple_store.save(ontology=ontology, data=data, id=id)
 
         if vector_store:
             vector_store.save(g=data, id=id)
 
-        # debug
-        _render(g=data, format="image")
         data.remove((None, None, None))
 
 
@@ -193,20 +219,21 @@ def _retain(
         vector_store=vector_store,
         triple_store=triple_store,
         str_ontology=str_ontology,
-        message=message, 
-        id=id
+        message=message,
+        id=id,
+        ephemeral=ephemeral,
     )
 
     save_memory(
         ontology=ontology,
         namespaces=namespaces,
         data=data,
-        llm=llm, 
-        triple_store=triple_store, 
-        vector_store=vector_store, 
-        message=message, 
-        id=id, 
-        ephemeral=ephemeral, 
-        str_ontology=str_ontology, 
-        updated_memory=updated_memory
+        llm=llm,
+        triple_store=triple_store,
+        vector_store=vector_store,
+        message=message,
+        id=id,
+        ephemeral=ephemeral,
+        str_ontology=str_ontology,
+        updated_memory=updated_memory,
     )

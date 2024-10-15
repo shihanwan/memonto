@@ -162,39 +162,6 @@ class ApacheJena(TripleStoreModel):
 
         return result["results"]["bindings"]
 
-    def get_by_ids(self, ids: list[str], graph_id: str = None) -> Graph:
-        graph_id = f"data-{graph_id}" if graph_id else "data"
-        triple_ids = " ".join(f'("{id}")' for id in ids)
-
-        query = f"""
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-        CONSTRUCT {{
-            ?s ?p ?o .
-        }}
-        WHERE {{
-            GRAPH <{graph_id}> {{
-                VALUES (?uuid) {{ {triple_ids} }}
-                ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
-                ?triple_node rdf:subject ?s ;
-                            rdf:predicate ?p ;
-                            rdf:object ?o .
-            }}
-        }}
-        """
-
-        result = self._query(
-            url=f"{self.connection_url}/sparql",
-            method=GET,
-            query=query,
-            format=TURTLE,
-        )
-
-        g = Graph()
-        g.parse(data=result, format="turtle")
-
-        return g
-    
     def delete(self, id: str = None) -> None:
         query = f"""DROP GRAPH <ontology-{id}> ; DROP GRAPH <data-{id}> ;"""
 
