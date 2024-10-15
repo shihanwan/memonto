@@ -25,6 +25,7 @@ class Memonto(BaseModel):
     triple_store: Optional[TripleStoreModel] = None
     vector_store: Optional[VectorStoreModel] = None
     auto_expand: Optional[bool] = False
+    auto_update: Optional[bool] = False
     ephemeral: Optional[bool] = False
     debug: Optional[bool] = False
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -63,6 +64,7 @@ class Memonto(BaseModel):
             message=message,
             id=self.id,
             auto_expand=self.auto_expand,
+            auto_update=self.auto_update,
             ephemeral=self.ephemeral,
         )
 

@@ -202,10 +202,12 @@ def _retain(
     message: str,
     id: str,
     auto_expand: bool,
+    auto_update: bool,
     ephemeral: bool,
 ) -> None:
     str_ontology = ontology.serialize(format="turtle")
-
+    updated_memory = ""
+    
     if auto_expand:
         ontology = expand_ontology(
             ontology=ontology,
@@ -213,17 +215,17 @@ def _retain(
             message=message,
         )
 
-    # TODO: this should work with ephemeral as well but needs to be adjusted slightly
-    updated_memory = update_memory(
-        data=data,
-        llm=llm,
-        vector_store=vector_store,
-        triple_store=triple_store,
-        str_ontology=str_ontology,
-        message=message,
-        id=id,
-        ephemeral=ephemeral,
-    )
+    if auto_update:
+        updated_memory = update_memory(
+            data=data,
+            llm=llm,
+            vector_store=vector_store,
+            triple_store=triple_store,
+            str_ontology=str_ontology,
+            message=message,
+            id=id,
+            ephemeral=ephemeral,
+        )
 
     save_memory(
         ontology=ontology,
