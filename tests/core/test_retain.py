@@ -56,6 +56,7 @@ def test_commit_memory(
         message=user_query,
         id=id,
         auto_expand=False,
+        auto_update=False,
         ephemeral=False,
     )
 
@@ -64,6 +65,7 @@ def test_commit_memory(
         temperature=0.2,
         ontology=ANY,
         user_message=user_query,
+        updated_memory="",
     )
 
     assert mock_llm.prompt.call_count == 1
@@ -91,6 +93,7 @@ def test_commit_memory_with_exception(
         message=user_query,
         id=id,
         auto_expand=False,
+        auto_update=False,
         ephemeral=False,
     )
 
@@ -99,6 +102,7 @@ def test_commit_memory_with_exception(
         temperature=0.2,
         ontology=ANY,
         user_message=user_query,
+        updated_memory="",
     )
 
     ctmeh_prompt = call(
@@ -132,6 +136,7 @@ def test_commit_memory_auto_expand(
         message=user_query,
         id=id,
         auto_expand=True,
+        auto_update=False,
         ephemeral=False,
     )
 
@@ -140,6 +145,7 @@ def test_commit_memory_auto_expand(
         temperature=0.2,
         ontology=ANY,
         user_message=user_query,
+        updated_memory="",
     )
 
     eo_prompt = call(

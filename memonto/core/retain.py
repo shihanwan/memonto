@@ -1,13 +1,19 @@
+import ast
 from rdflib import Graph, Namespace
 
 from memonto.llms.base_llm import LLMModel
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
-from memonto.utils.rdf import _render, hydrate_graph_with_ids
+from memonto.utils.rdf import (
+    _render,
+    find_updated_triples,
+    find_updated_triples_ephemeral,
+    hydrate_graph_with_ids,
+)
 
 
-def run_script(
+def _run_script(
     script: str,
     exec_ctx: dict,
     message: str,
@@ -66,7 +72,80 @@ def expand_ontology(
     return ontology
 
 
-def _retain(
+def update_memory(
+    data: Graph,
+    llm: LLMModel,
+    triple_store: TripleStoreModel,
+    vector_store: VectorStoreModel,
+    str_ontology: str,
+    message: str,
+    id: str,
+    ephemeral: bool,
+) -> str:
+    if ephemeral:
+        data_list = []
+
+        for s, p, o in data:
+            data_list.append(
+                {
+                    "s": str(s),
+                    "p": str(p),
+                    "o": str(o),
+                }
+            )
+
+        logger.debug(f"existing memories\n{data_list}\n")
+
+        updates = llm.prompt(
+            prompt_name="update_memory",
+            temperature=0.2,
+            ontology=str_ontology,
+            user_message=message,
+            existing_memory=str(data_list),
+        )
+        logger.debug(f"updated memories\n{updates}\n")
+
+        updates = ast.literal_eval(updates)
+        updated_memory = find_updated_triples_ephemeral(updates, data_list)
+        logger.debug(f"memories diff\n{updated_memory}\n")
+
+        for s, p, o in data:
+            for t in updated_memory:
+                if str(s) == t["s"] and str(p) == t["p"] and str(o) == t["o"]:
+                    data.remove((s, p, o))
+
+        return str(updated_memory)
+    else:
+        matched = vector_store.search(message=message, id=id, k=3)
+        logger.debug(f"existing memories\n{matched}\n")
+
+        if not matched:
+            return ""
+
+        updates = llm.prompt(
+            prompt_name="update_memory",
+            temperature=0.2,
+            ontology=str_ontology,
+            user_message=message,
+            existing_memory=str(matched),
+        )
+
+        updates = ast.literal_eval(updates)
+        logger.debug(f"updated memories\n{updates}\n")
+
+        updated_memory = find_updated_triples(original=matched, updated=updates)
+        logger.debug(f"memories diff\n{updated_memory}\n")
+
+        if not updated_memory:
+            return ""
+
+        vector_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
+        triple_store.delete_by_ids(graph_id=id, ids=updated_memory.keys())
+
+        return str(updated_memory)
+
+
+def save_memory(
     ontology: Graph,
     namespaces: dict[str, Namespace],
     data: Graph,
@@ -75,28 +154,21 @@ def _retain(
     vector_store: VectorStoreModel,
     message: str,
     id: str,
-    auto_expand: bool,
     ephemeral: bool,
+    str_ontology: str,
+    updated_memory: str,
 ) -> None:
-    if auto_expand:
-        ontology = expand_ontology(
-            ontology=ontology,
-            llm=llm,
-            message=message,
-        )
-
-    str_ontology = ontology.serialize(format="turtle")
-
     script = llm.prompt(
         prompt_name="commit_to_memory",
         temperature=0.2,
         ontology=str_ontology,
         user_message=message,
+        updated_memory=updated_memory,
     )
 
     logger.debug(f"Retain Script\n{script}\n")
 
-    data = run_script(
+    data = _run_script(
         script=script,
         exec_ctx={"data": data} | namespaces,
         message=message,
@@ -107,13 +179,64 @@ def _retain(
 
     logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
+    # debug
+    # _render(g=data, format="image")
+
     if not ephemeral:
         hydrate_graph_with_ids(data)
-
         triple_store.save(ontology=ontology, data=data, id=id)
 
         if vector_store:
             vector_store.save(g=data, id=id)
 
-        # print(_render(g=data, format="image"))
         data.remove((None, None, None))
+
+
+def _retain(
+    ontology: Graph,
+    namespaces: dict[str, Namespace],
+    data: Graph,
+    llm: LLMModel,
+    triple_store: TripleStoreModel,
+    vector_store: VectorStoreModel,
+    message: str,
+    id: str,
+    auto_expand: bool,
+    auto_update: bool,
+    ephemeral: bool,
+) -> None:
+    str_ontology = ontology.serialize(format="turtle")
+    updated_memory = ""
+
+    if auto_expand:
+        ontology = expand_ontology(
+            ontology=ontology,
+            llm=llm,
+            message=message,
+        )
+
+    if auto_update:
+        updated_memory = update_memory(
+            data=data,
+            llm=llm,
+            vector_store=vector_store,
+            triple_store=triple_store,
+            str_ontology=str_ontology,
+            message=message,
+            id=id,
+            ephemeral=ephemeral,
+        )
+
+    save_memory(
+        ontology=ontology,
+        namespaces=namespaces,
+        data=data,
+        llm=llm,
+        triple_store=triple_store,
+        vector_store=vector_store,
+        message=message,
+        id=id,
+        ephemeral=ephemeral,
+        str_ontology=str_ontology,
+        updated_memory=updated_memory,
+    )

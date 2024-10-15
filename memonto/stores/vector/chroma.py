@@ -84,21 +84,32 @@ class Chroma(VectorStoreModel):
             except Exception as e:
                 logger.error(f"Chroma Save\n{e}\n")
 
-    def search(self, message: str, id: str = None, k: int = 3) -> list[dict]:
-        collection = self.client.get_collection(id or "default")
-
+    def search(self, message: str, id: str = None, k: int = 3) -> dict[str, dict]:
         try:
+            collection = self.client.get_collection(id or "default")
             matched = collection.query(
                 query_texts=[message],
                 n_results=k,
             )
+        except ValueError as e:
+            return {}
         except Exception as e:
             logger.error(f"Chroma Search\n{e}\n")
 
-        return matched.get("ids", [])[0]
+        ids = matched.get("ids", [[]])[0]
+        meta = matched.get("metadatas", [[]])[0]
+
+        return {id: meta[i] if i < len(meta) else None for i, id in enumerate(ids)}
 
     def delete(self, id: str) -> None:
         try:
             self.client.delete_collection(id)
         except Exception as e:
             logger.error(f"Chroma Delete\n{e}\n")
+
+    def delete_by_ids(self, graph_id: str, ids: list[str]) -> None:
+        try:
+            collection = self.client.get_collection(graph_id or "default")
+            collection.delete(ids=list(ids))
+        except Exception as e:
+            logger.error(f"Chroma Delete by IDs\n{e}\n")

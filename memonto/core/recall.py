@@ -9,11 +9,12 @@ from memonto.utils.rdf import serialize_graph_without_ids
 
 
 def _hydrate_triples(
-    triples: list,
+    matched: list,
     triple_store: VectorStoreModel,
     id: str = None,
 ) -> Graph:
-    triple_ids = " ".join(f'("{triple_id}")' for triple_id in triples)
+    matched_ids = matched.keys()
+    triple_ids = " ".join(f'("{id}")' for id in matched_ids)
 
     graph_id = f"data-{id}" if id else "data"
 
@@ -161,11 +162,11 @@ def get_contextual_memory(
         memory = serialize_graph_without_ids(data)
     elif context:
         try:
-            matched_triples = vector_store.search(message=context, id=id)
-            logger.debug(f"Matched Triples Raw\n{matched_triples}\n")
+            matched = vector_store.search(message=context, id=id)
+            logger.debug(f"Matched Triples Raw\n{matched}\n")
 
             matched_graph = _hydrate_triples(
-                triples=matched_triples,
+                matched=matched,
                 triple_store=triple_store,
                 id=id,
             )

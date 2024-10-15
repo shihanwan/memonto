@@ -1,19 +1,24 @@
 You are a software engineer tasked to create a Python script to extract ALL POSSIBLE relevant information from a user message that maps to a predefined RDF ontology.
 
-Given the following RDF graph that defines our desired ontology and namespaces:
+Given this RDF graph that defines our desired ontology and namespaces:
 ```
 ${ontology}
 ```
 
-And the following user message:
+And this user message:
 ```
 ${user_message}
 ```
 
-Analyze the user message to find AS MUCH relevant information AS POSSIBLE that could fit onto the above ontology then generate the Python code while adhering to these rules:
-- First find all the information in the user message that maps onto the above ontology.
-- Then apply only the existing namespaces to the new information.
-- Finally create the script that will add them to graph `data`.
+And these removed triples:
+```
+${updated_memory}
+```
+
+Analyze the user message to find AS MUCH new information AS POSSIBLE that could fit onto the above ontology while adhering to these rules:
+- First find all the new information in the user message that maps onto BOTH the above ontology and ESPECIALLY the removed triples.
+- Second apply the existing namespaces to the extracted information.
+- Finally create the script that will add the extracted information to an rdflib graph called `data`.
 - NEVER generate code that initializes new graphs, namespaces, classes, properties, etc.
 - GENERATE Python code to add the triples with the relevant information assuming rdflib Graph `data` and the newly added namespaces already exists.
 - GENERATE all necessary rdflib and rdflib.namespace imports for the code to run.

@@ -2,7 +2,11 @@ import pytest
 from rdflib import Graph, URIRef, Literal, BNode
 
 from memonto.utils.namespaces import TRIPLE_PROP
-from memonto.utils.rdf import serialize_graph_without_ids, hydrate_graph_with_ids
+from memonto.utils.rdf import (
+    find_updated_triples_ephemeral,
+    hydrate_graph_with_ids,
+    serialize_graph_without_ids,
+)
 
 
 @pytest.fixture
@@ -56,3 +60,36 @@ def test_hydrate_graph_with_ids(graph):
     uuid_triples = [t for t in g if t[1] == TRIPLE_PROP.uuid]
     assert len(uuid_triples) == 2
     assert all(isinstance(t[2], Literal) for t in uuid_triples)
+
+
+def test_find_updated_triples_ephemeral():
+    original = [
+        {"s": "1", "p": "2", "o": "3"},
+        {"s": "3", "p": "2", "o": "1"},
+        {"s": "5", "p": "7", "o": "9"},
+    ]
+    updated = [
+        {"s": "1", "p": "2", "o": "9"},
+        {"s": "9", "p": "2", "o": "1"},
+        {"s": "5", "p": "7", "o": "9"},
+    ]
+
+    assert find_updated_triples_ephemeral(original, updated) == [
+        {"s": "1", "p": "2", "o": "9"},
+        {"s": "9", "p": "2", "o": "1"},
+    ]
+
+
+def test_find_updated_triples_ephemeral_no_updates():
+    original = [
+        {"s": "1", "p": "2", "o": "3"},
+        {"s": "3", "p": "2", "o": "1"},
+        {"s": "5", "p": "7", "o": "9"},
+    ]
+    updated = [
+        {"s": "1", "p": "2", "o": "3"},
+        {"s": "3", "p": "2", "o": "1"},
+        {"s": "5", "p": "7", "o": "9"},
+    ]
+
+    assert find_updated_triples_ephemeral(original, updated) == []

@@ -1,0 +1,23 @@
+Given these existing triples in our graph `data`:
+```
+${existing_memory}
+```
+
+and this RDF graph that defines our desired ontology and namespaces:
+```
+${ontology}
+```
+
+And this user message:
+```
+${user_message}
+```
+
+Analyze the user message to find information that updates the existing triples while adhering to these rules:
+- First find all the information in the user message that updates existing information in the graph `data`.
+- Second replace the values of existing triples with the updated information without modifying anything else.
+- Finally output the dictionary of existing triples as a string that can be converted back to a list.
+- IGNORE any new information that does not update the existing triples.
+- NEVER add any new triples to the existing triples.
+- If there are no information to update then return the existing triples as they are.
+- Please return only the string of the dictionary without using ``` or any other code formatting symbols. Return only plain text.

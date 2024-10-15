@@ -1,3 +1,4 @@
+import json
 from rdflib import Graph, Literal, Namespace, URIRef
 from SPARQLWrapper import SPARQLWrapper, GET, POST, TURTLE, JSON
 from SPARQLWrapper.SPARQLExceptions import SPARQLWrapperException
@@ -5,6 +6,7 @@ from typing import Tuple
 
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.utils.logger import logger
+from memonto.utils.namespaces import TRIPLE_PROP
 
 
 class ApacheJena(TripleStoreModel):
@@ -162,6 +164,40 @@ class ApacheJena(TripleStoreModel):
 
     def delete(self, id: str = None) -> None:
         query = f"""DROP GRAPH <ontology-{id}> ; DROP GRAPH <data-{id}> ;"""
+
+        self._query(
+            url=f"{self.connection_url}/update",
+            method=POST,
+            query=query,
+        )
+
+    def delete_by_ids(self, ids: list[str], graph_id: str = None) -> None:
+        g_id = f"data-{graph_id}" if graph_id else "data"
+        t_ids = " ".join(f'"{id}"' for id in ids)
+
+        query = f"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+        DELETE {{
+            GRAPH <{g_id}> {{
+                ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
+                ?triple_node rdf:subject ?s ;
+                            rdf:predicate ?p ;
+                            rdf:object ?o .
+                ?s ?p ?o .
+            }}
+        }}
+        WHERE {{
+            VALUES ?uuid {{ {t_ids} }}
+            GRAPH <{g_id}> {{
+                ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
+                ?triple_node rdf:subject ?s ;
+                            rdf:predicate ?p ;
+                            rdf:object ?o .
+                ?s ?p ?o .
+            }}
+        }}
+        """
 
         self._query(
             url=f"{self.connection_url}/update",
