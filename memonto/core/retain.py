@@ -207,7 +207,7 @@ def save_memory(
     logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
     # debug
-    _render(g=data, ns=namespaces, format="image")
+    # _render(g=data, ns=namespaces, format="image")
 
     if not ephemeral:
         hydrate_graph_with_ids(data)
