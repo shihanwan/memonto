@@ -158,9 +158,10 @@ def find_relevant_memories(
         relevant_memory = str(data.serialize(format="turtle"))
     else:
         relevant_memory = str(vector_store.search(message=message, id=id, k=3))
-    
+
     logger.debug(f"relevant_memory\n{relevant_memory}\n")
     return relevant_memory
+
 
 def save_memory(
     ontology: Graph,
@@ -182,7 +183,6 @@ def save_memory(
         id=id,
         ephemeral=ephemeral,
     )
-    print(relevant_memory)
 
     script = llm.prompt(
         prompt_name="commit_to_memory",
