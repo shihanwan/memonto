@@ -28,6 +28,17 @@ class TripleStoreModel(BaseModel, ABC):
         pass
 
     @abstractmethod
+    def get_all(self, graph_id: str = None) -> str:
+        """
+        Get all memory data from the datastore.
+
+        :param graph_id: The id of the graph to get all memory data from.
+
+        :return: A string representation of the memory data.
+        """
+        pass
+
+    @abstractmethod
     def query(self):
         """
         Perform a raw query against the datastore for memory data.
