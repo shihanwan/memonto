@@ -66,6 +66,7 @@ def test_commit_memory(
         ontology=ANY,
         user_message=user_query,
         updated_memory="",
+        relevant_memory=ANY,
     )
 
     assert mock_llm.prompt.call_count == 1
@@ -103,6 +104,7 @@ def test_commit_memory_with_exception(
         ontology=ANY,
         user_message=user_query,
         updated_memory="",
+        relevant_memory=ANY,
     )
 
     ctmeh_prompt = call(
@@ -146,6 +148,7 @@ def test_commit_memory_auto_expand(
         ontology=ANY,
         user_message=user_query,
         updated_memory="",
+        relevant_memory=ANY,
     )
 
     eo_prompt = call(

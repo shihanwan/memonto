@@ -14,14 +14,14 @@ def _forget(
 ) -> None:
     if ephemeral:
         data.remove((None, None, None))
+    else:
+        try:
+            if vector_store:
+                vector_store.delete(id)
 
-    try:
-        if vector_store:
-            vector_store.delete(id)
-
-        if triple_store:
-            triple_store.delete_all(id)
-    except ValueError as e:
-        logger.warning(e)
-    except Exception as e:
-        logger.error(e)
+            if triple_store:
+                triple_store.delete_all(id)
+        except ValueError as e:
+            logger.warning(e)
+        except Exception as e:
+            logger.error(e)
