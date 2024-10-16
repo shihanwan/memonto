@@ -65,8 +65,6 @@ class Chroma(VectorStoreModel):
             _p = to_human_readable(str(p), ns)
             _o = to_human_readable(str(o), ns)
 
-            print(_s, _p, _o)
-
             id = ""
             for bnode in g.subjects(RDF.subject, s):
                 if (bnode, RDF.predicate, p) in g and (bnode, RDF.object, o) in g:

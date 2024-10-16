@@ -4,7 +4,7 @@ import os
 import re
 import uuid
 from collections import defaultdict
-from rdflib import Graph, Literal, BNode, Namespace
+from rdflib import Graph, Literal, BNode, Namespace, URIRef
 from rdflib.namespace import RDF, RDFS, OWL
 from typing import Union
 
@@ -29,6 +29,17 @@ def to_human_readable(c: str, ns: dict[str, Namespace]) -> str:
     c = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", c).lower()
 
     return c
+
+
+def format_node(node: URIRef | Literal | BNode) -> str:
+    if isinstance(node, URIRef):
+        return f"<{str(node)}>"
+    elif isinstance(node, Literal):
+        return f'"{str(node)}"'
+    elif isinstance(node, BNode):
+        return f"_:{str(node)}"
+    else:
+        return f'"{str(node)}"'
 
 
 def serialize_graph_without_ids(g: Graph, format: str = "turtle") -> Graph:
