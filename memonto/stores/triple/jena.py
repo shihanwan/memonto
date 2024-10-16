@@ -203,7 +203,7 @@ class ApacheJena(TripleStoreModel):
     def get_all(self, graph_id: str = None) -> str:
         g_id = f"data-{graph_id}" if graph_id else "data"
 
-        query=f"""
+        query = f"""
         CONSTRUCT {{
             ?s ?p ?o .
         }} WHERE {{
@@ -227,8 +227,10 @@ class ApacheJena(TripleStoreModel):
             return ""
 
         return str(result)
-    
-    def get_context(self, matched: dict[str, dict], graph_id: str, depth: int = 1) -> str:
+
+    def get_context(
+        self, matched: dict[str, dict], graph_id: str, depth: int = 1
+    ) -> str:
         g_id = f"data-{graph_id}" if graph_id else "data"
         nodes_set = set()
 

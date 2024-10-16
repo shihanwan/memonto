@@ -109,8 +109,12 @@ def generate_image(g: Graph, ns: dict[str, Namespace], path: str = None) -> None
         if isinstance(o, BNode) and (o, TRIPLE_PROP.uuid, None) in g:
             continue
 
-        s_label = bnode_labels[s] if isinstance(s, BNode) else to_human_readable(str(s), ns)
-        o_label = bnode_labels[o] if isinstance(o, BNode) else to_human_readable(str(o), ns)
+        s_label = (
+            bnode_labels[s] if isinstance(s, BNode) else to_human_readable(str(s), ns)
+        )
+        o_label = (
+            bnode_labels[o] if isinstance(o, BNode) else to_human_readable(str(o), ns)
+        )
         p_label = to_human_readable(str(p), ns)
 
         dot.node(s_label, s_label)
