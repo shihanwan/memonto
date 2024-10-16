@@ -10,14 +10,20 @@ And this user message:
 ${user_message}
 ```
 
-And these removed triples:
+And these removed memories:
 ```
 ${updated_memory}
 ```
 
+And these relevant memories:
+```
+${relevant_memory}
+```
+
 Analyze the user message to find AS MUCH new information AS POSSIBLE that could fit onto the above ontology while adhering to these rules:
-- First find all the new information in the user message that maps onto BOTH the above ontology and ESPECIALLY the removed triples.
-- Second apply the existing namespaces to the extracted information.
+- First find all the new information in the user message that maps onto BOTH the above ontology and ESPECIALLY the removed memories.
+- Second check if the relevant memories can help extract even more information from the user message that maps onto the ontology or removed memories.
+- Third apply only the existing namespaces to the extracted information.
 - Finally create the script that will add the extracted information to an rdflib graph called `data`.
 - NEVER generate code that initializes new graphs, namespaces, classes, properties, etc.
 - GENERATE Python code to add the triples with the relevant information assuming rdflib Graph `data` and the newly added namespaces already exists.

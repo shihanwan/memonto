@@ -145,6 +145,23 @@ def update_memory(
         return str(updated_memory)
 
 
+def find_relevant_memories(
+    data: Graph,
+    vector_store: VectorStoreModel,
+    message: str,
+    id: str,
+    ephemeral: bool,
+) -> str:
+    relevant_memory = ""
+
+    if ephemeral:
+        relevant_memory = str(data.serialize(format="turtle"))
+    else:
+        relevant_memory = str(vector_store.search(message=message, id=id, k=3))
+    
+    logger.debug(f"relevant_memory\n{relevant_memory}\n")
+    return relevant_memory
+
 def save_memory(
     ontology: Graph,
     namespaces: dict[str, Namespace],
@@ -158,12 +175,22 @@ def save_memory(
     str_ontology: str,
     updated_memory: str,
 ) -> None:
+    relevant_memory = find_relevant_memories(
+        data=data,
+        vector_store=vector_store,
+        message=message,
+        id=id,
+        ephemeral=ephemeral,
+    )
+    print(relevant_memory)
+
     script = llm.prompt(
         prompt_name="commit_to_memory",
         temperature=0.2,
         ontology=str_ontology,
         user_message=message,
         updated_memory=updated_memory,
+        relevant_memory=relevant_memory,
     )
 
     logger.debug(f"Retain Script\n{script}\n")
@@ -180,7 +207,7 @@ def save_memory(
     logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
     # debug
-    # _render(g=data, ns=namespaces, format="image")
+    _render(g=data, ns=namespaces, format="image")
 
     if not ephemeral:
         hydrate_graph_with_ids(data)
