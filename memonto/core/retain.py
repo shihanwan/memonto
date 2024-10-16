@@ -180,14 +180,14 @@ def save_memory(
     logger.debug(f"Data Graph\n{data.serialize(format='turtle')}\n")
 
     # debug
-    # _render(g=data, format="image")
+    _render(g=data, ns=namespaces, format="image")
 
     if not ephemeral:
         hydrate_graph_with_ids(data)
         triple_store.save(ontology=ontology, data=data, id=id)
 
         if vector_store:
-            vector_store.save(g=data, id=id)
+            vector_store.save(g=data, ns=namespaces, id=id)
 
         data.remove((None, None, None))
 

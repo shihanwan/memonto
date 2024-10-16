@@ -2,12 +2,12 @@ import chromadb
 import json
 from chromadb.config import Settings
 from pydantic import model_validator
-from rdflib import Graph, RDF, BNode
+from rdflib import Graph, RDF, Namespace
 from typing import Literal
 
 from memonto.stores.vector.base_store import VectorStoreModel
 from memonto.utils.logger import logger
-from memonto.utils.rdf import is_rdf_schema, remove_namespace
+from memonto.utils.rdf import is_bnode_uuid, is_rdf_schema, to_human_readable
 from memonto.utils.namespaces import TRIPLE_PROP
 
 
@@ -50,7 +50,7 @@ class Chroma(VectorStoreModel):
 
         return self
 
-    def save(self, g: Graph, id: str = None) -> None:
+    def save(self, g: Graph, ns: dict[str, Namespace], id: str = None) -> None:
         collection = self.client.get_or_create_collection(id or "default")
 
         documents = []
@@ -58,14 +58,14 @@ class Chroma(VectorStoreModel):
         ids = []
 
         for s, p, o in g:
-            if is_rdf_schema(p):
-                continue
-            if isinstance(s, BNode) and (s, TRIPLE_PROP.uuid, None) in g:
+            if is_rdf_schema(p) or is_bnode_uuid(s, g):
                 continue
 
-            _s = remove_namespace(str(s))
-            _p = remove_namespace(str(p))
-            _o = remove_namespace(str(o))
+            _s = to_human_readable(str(s), ns)
+            _p = to_human_readable(str(p), ns)
+            _o = to_human_readable(str(o), ns)
+
+            print(_s, _p, _o)
 
             id = ""
             for bnode in g.subjects(RDF.subject, s):
