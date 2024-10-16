@@ -7,6 +7,7 @@ from typing import Tuple
 from memonto.stores.triple.base_store import TripleStoreModel
 from memonto.utils.logger import logger
 from memonto.utils.namespaces import TRIPLE_PROP
+from memonto.utils.rdf import format_node
 
 
 class ApacheJena(TripleStoreModel):
@@ -52,6 +53,43 @@ class ApacheJena(TripleStoreModel):
     def _get_prefixes(self, g: Graph) -> list[str]:
         gt = g.serialize(format="turtle")
         return [line for line in gt.splitlines() if line.startswith("@prefix")]
+
+    def _hydrate_triples(
+        self,
+        matched: list,
+        graph_id: str = None,
+    ) -> Graph:
+        matched_ids = matched.keys()
+        triple_ids = " ".join(f'("{id}")' for id in matched_ids)
+        g_id = f"data-{graph_id}" if graph_id else "data"
+
+        query = f"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+        CONSTRUCT {{
+            ?s ?p ?o .
+        }}
+        WHERE {{
+            GRAPH <{g_id}> {{
+                VALUES (?uuid) {{ {triple_ids} }}
+                ?triple_node <{TRIPLE_PROP.uuid}> ?uuid .
+                ?triple_node rdf:subject ?s ;
+                            rdf:predicate ?p ;
+                            rdf:object ?o .
+            }}
+        }}
+        """
+
+        result = self._query(
+            url=f"{self.connection_url}/sparql",
+            method=GET,
+            query=query,
+        )
+
+        g = Graph()
+        g.parse(data=result, format="turtle")
+
+        return g
 
     def _load(
         self,
@@ -162,8 +200,117 @@ class ApacheJena(TripleStoreModel):
 
         return result["results"]["bindings"]
 
-    def delete(self, id: str = None) -> None:
-        query = f"""DROP GRAPH <ontology-{id}> ; DROP GRAPH <data-{id}> ;"""
+    def get_all(self, graph_id: str = None) -> str:
+        g_id = f"data-{graph_id}" if graph_id else "data"
+
+        query = f"""
+        CONSTRUCT {{
+            ?s ?p ?o .
+        }} WHERE {{
+            GRAPH <{g_id}> {{
+                ?s ?p ?o .
+                FILTER NOT EXISTS {{ ?s <{TRIPLE_PROP.uuid}> ?uuid }}
+            }}
+        }}
+        """
+
+        result = self._query(
+            url=f"{self.connection_url}/sparql",
+            method=GET,
+            query=query,
+        )
+
+        if isinstance(result, bytes):
+            result = result.decode("utf-8")
+
+        if not result:
+            return ""
+
+        return str(result)
+
+    def get_context(
+        self, matched: dict[str, dict], graph_id: str, depth: int = 1
+    ) -> str:
+        g_id = f"data-{graph_id}" if graph_id else "data"
+        nodes_set = set()
+
+        matched_graph = self._hydrate_triples(
+            matched=matched,
+            graph_id=graph_id,
+        )
+        logger.debug(f"Matched Triples\n{matched_graph.serialize(format='turtle')}\n")
+
+        for s, p, o in matched_graph:
+            nodes_set.add(format_node(s))
+            nodes_set.add(format_node(o))
+
+        explored_nodes = set(nodes_set)
+        new_nodes_set = nodes_set.copy()
+
+        query = None
+
+        for _ in range(depth):
+            if not new_nodes_set:
+                break
+
+            node_list = ", ".join(new_nodes_set)
+
+            query = f"""
+            CONSTRUCT {{
+                ?s ?p ?o .
+            }}
+            WHERE {{
+                GRAPH <{g_id}> {{
+                    ?s ?p ?o .
+                    FILTER (
+                        (?s IN ({node_list}) || ?o IN ({node_list})) &&
+                        NOT EXISTS {{ ?s <{TRIPLE_PROP.uuid}> ?uuid }}
+                    )
+                }}
+            }}
+            """
+
+            logger.debug(f"Find adjacent triples SPARQL query\n{query}\n")
+
+            try:
+                result_triples = self.query(query=query, format="turtle")
+            except Exception as e:
+                raise ValueError(f"SPARQL Query Error: {e}")
+
+            if result_triples is None:
+                raise ValueError("SPARQL query returned no results")
+
+            graph = Graph()
+            graph.parse(data=result_triples, format="turtle")
+
+            temp_new_nodes_set = set()
+            for s, p, o in graph:
+                formatted_subject = format_node(s)
+                formatted_object = format_node(o)
+
+                if formatted_subject not in explored_nodes:
+                    temp_new_nodes_set.add(formatted_subject)
+                    explored_nodes.add(formatted_subject)
+
+                if formatted_object not in explored_nodes:
+                    temp_new_nodes_set.add(formatted_object)
+                    explored_nodes.add(formatted_object)
+
+            new_nodes_set = temp_new_nodes_set
+
+        if query is None:
+            return ""
+
+        result = self.query(query=query, format="turtle")
+        logger.debug(f"Adjacent Triples\n{result}\n")
+
+        return result
+
+    def delete_all(self, graph_id: str = None) -> None:
+        d_id = f"data-{graph_id}" if graph_id else "data"
+        o_id = f"ontology-{graph_id}" if graph_id else "ontology"
+
+        query = f"""DROP GRAPH <{o_id}> ; DROP GRAPH <{d_id}> ;"""
 
         self._query(
             url=f"{self.connection_url}/update",

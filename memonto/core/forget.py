@@ -20,7 +20,7 @@ def _forget(
             vector_store.delete(id)
 
         if triple_store:
-            triple_store.delete(id)
+            triple_store.delete_all(id)
     except ValueError as e:
         logger.warning(e)
     except Exception as e:
